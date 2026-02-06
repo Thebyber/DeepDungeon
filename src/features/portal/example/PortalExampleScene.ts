@@ -1,4 +1,5 @@
 import mapJson from "assets/map/plaza.json";
+import mapJson2 from "assets/map/DeepDungeonMap1.json";
 import { SceneId } from "features/world/mmoMachine";
 import { BaseScene, NPCBumpkin } from "features/world/scenes/BaseScene";
 import { MachineInterpreter } from "./lib/portalMachine";
@@ -13,13 +14,13 @@ export const NPCS: NPCBumpkin[] = [
 ];
 
 export class PortalExampleScene extends BaseScene {
-  sceneId: SceneId = "portal_example";
+  sceneId: SceneId = "deep_dungeon";
 
   constructor() {
     super({
-      name: "portal_example",
+      name: "deep_dungeon",
       map: {
-        json: mapJson,
+        json: mapJson2,
       },
       audio: { fx: { walk_key: "dirt_footstep" } },
     });

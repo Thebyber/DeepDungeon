@@ -10,7 +10,7 @@ import Decimal from "decimal.js-light";
 
 import { Inventory } from "features/island/hud/components/inventory/Inventory";
 
-export const PortalExampleHUD: React.FC = () => {
+export const DeepDungeonHUD: React.FC = () => {
   const { portalService } = useContext(PortalContext);
   const [portalState] = useActor(portalService);
 

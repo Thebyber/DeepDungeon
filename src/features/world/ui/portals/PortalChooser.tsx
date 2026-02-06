@@ -14,6 +14,7 @@ import { translate } from "lib/i18n/translate";
 import { CloseButtonPanel } from "features/game/components/CloseablePanel";
 import { MineWhack } from "./MineWhack";
 import { Memory } from "./Memory";
+//import { DeepDungeon } from "./DeepDungeon";
 
 const host = window.location.host.replace(/^www\./, "");
 const LOCAL_STORAGE_KEY = `portal-chooser-${host}-${window.location.pathname}`;
@@ -52,6 +53,13 @@ export const PORTAL_OPTIONS: PortalOption[] = [
     description: translate("portal.chickenRescue.description"),
     component: ChickenRescue,
   },
+  /*{
+    id: "deep-dungeon",
+    npc: "cluck e cheese",
+    title: translate("portal.cropsAndChickens.title"),
+    description: translate("portal.cropsAndChickens.description"),
+    component: DeepDungeon,
+  },*/
   {
     id: "crops-and-chickens",
     npc: "cluck e cheese",
