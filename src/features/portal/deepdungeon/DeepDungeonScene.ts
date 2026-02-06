@@ -1,11 +1,7 @@
-import mapJson2 from "assets/map/DeepDungeonMap1.json";
-import tilesetconfig from "assets/map/Tileset-deep-dungeon.json";
+import mapJson from "assets/map/DeepDungeonMap1.json";
 import { SceneId } from "features/world/mmoMachine";
-import { SQUARE_WIDTH } from "features/game/lib/constants";
 import { BaseScene, NPCBumpkin } from "features/world/scenes/BaseScene";
 import { MachineInterpreter } from "./lib/portalMachine";
-
-import mapJson from "assets/map/plaza.json";
 
 export const NPCS: NPCBumpkin[] = [
   {
@@ -17,11 +13,11 @@ export const NPCS: NPCBumpkin[] = [
 ];
 
 export class DeepDungeonScene extends BaseScene {
-  sceneId: SceneId = "portal_example";
+  sceneId: SceneId = "deep_dungeon";
 
   constructor() {
     super({
-      name: "portal_example",
+      name: "deep_dungeon",
       map: {
         json: mapJson,
       },
@@ -35,7 +31,7 @@ export class DeepDungeonScene extends BaseScene {
 
   async create() {
     this.map = this.make.tilemap({
-      key: "festival_of_colors",
+      key: "Tileset-deep-dungeon",
     });
 
     super.create();

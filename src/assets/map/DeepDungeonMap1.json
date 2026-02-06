@@ -116,7 +116,7 @@
   "tilesets": [
     {
       "firstgid": 1,
-      "source": "Tileset-deep-dungeon.tsx"
+      "source": "Tileset-deep-dungeon.json"
     }
   ],
   "tilewidth": 16,
