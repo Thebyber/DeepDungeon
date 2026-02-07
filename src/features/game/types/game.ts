@@ -279,6 +279,7 @@ export type Coupons =
   | "Cheer"
   | Keys
   | ChapterTicket
+  | ChapterRaffleTicket
   | FactionEmblem;
 
 export type Keys = "Treasure Key" | "Rare Key" | "Luxury Key";
@@ -417,6 +418,12 @@ export const COUPONS: Record<Coupons, { description: string }> = {
   Cheer: { description: translate("description.cheer") },
   "Pet Cookie": { description: translate("description.petCookie") },
   Floater: { description: "Collected during the Crabs and Traps." },
+  "Paw Prints Raffle Ticket": {
+    description: translate("description.pawPrintsRaffleTicket"),
+  },
+  "Crabs and Traps Raffle Ticket": {
+    description: translate("description.crabsAndTrapsRaffleTicket"),
+  },
   "Halloween Token 2025": {
     description: translate("description.halloweenToken2025"),
   },
@@ -521,6 +528,10 @@ export type FishBounty = Bounty & {
   name: FishName;
 };
 
+export type CrustaceanBounty = Bounty & {
+  name: CrustaceanName;
+};
+
 export type DollBounty = Bounty & {
   name: DollName;
 };
@@ -550,7 +561,8 @@ export type BountyRequest =
   | ExoticBounty
   | MarkBounty
   | DollBounty
-  | GiantFruitBounty;
+  | GiantFruitBounty
+  | CrustaceanBounty;
 
 export type Bounties = {
   requests: BountyRequest[];
@@ -1022,6 +1034,7 @@ export type BedName =
   | "Cow Bed"
   | "Pirate Bed"
   | "Royal Bed"
+  | "Pearl Bed"
   | "Double Bed"
   | "Messy Bed";
 
@@ -1646,6 +1659,7 @@ export type SocialFarming = {
     week: string;
   };
   villageProjects: Partial<Record<MonumentName, VillageProject>>;
+  completedProjects?: MonumentName[];
   cheersGiven: {
     date: string;
     projects: Partial<Record<MonumentName, number[]>>;

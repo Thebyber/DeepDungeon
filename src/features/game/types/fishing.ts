@@ -11,6 +11,8 @@ import { PurchaseOptions } from "./buyOptionPurchaseItem";
 import { Decimal } from "decimal.js-light";
 import { isCollectibleBuilt } from "../lib/collectibleBuilt";
 import type { ChapterName } from "./chapters";
+import { getCurrentChapter } from "./chapters";
+import { hasVipAccess } from "../lib/vipAccess";
 import { CrustaceanChum } from "./crustaceans";
 
 export type PurchaseableBait = "Fishing Lure";
@@ -681,7 +683,10 @@ export function getDailyFishingCount(state: GameState): number {
   return state.fishing.dailyAttempts?.[today] ?? 0;
 }
 
-export function getDailyFishingLimit(game: GameState): {
+export function getDailyFishingLimit(
+  game: GameState,
+  createdAt: number,
+): {
   limit: number;
   boostsUsed: BoostName[];
 } {
@@ -698,6 +703,12 @@ export function getDailyFishingLimit(game: GameState): {
   if (isCollectibleBuilt({ name: "Reelmaster's Chair", game })) {
     limit += 5;
     boostsUsed.push("Reelmaster's Chair");
+  }
+
+  // +5 daily limit if player has Nautilus
+  if (isCollectibleBuilt({ name: "Nautilus", game })) {
+    limit += 5;
+    boostsUsed.push("Nautilus");
   }
 
   // +5 daily limit if player had Fisherman's 5 Fold skill
@@ -722,6 +733,13 @@ export function getDailyFishingLimit(game: GameState): {
   if (isWearableActive({ name: "Saw Fish", game })) {
     limit += 5;
     boostsUsed.push("Saw Fish");
+  }
+
+  if (
+    hasVipAccess({ game, now: createdAt }) &&
+    getCurrentChapter(createdAt) === "Crabs and Traps"
+  ) {
+    limit += 5;
   }
 
   return { limit, boostsUsed };
@@ -769,20 +787,8 @@ export const GUARANTEED_CATCH_BY_BAIT: Record<GuaranteedBait, FishName[]> = {
     "Sunfish",
     "Cobia",
   ],
-  "Fish Oil": [
-    "Barred Knifejaw",
-    "Trout",
-    "Coelacanth",
-    "Saw Shark",
-    "Sunfish",
-  ],
-  "Crab Stick": [
-    "Barred Knifejaw",
-    "Whale Shark",
-    "White Shark",
-    "Parrotfish",
-    "Mahi Mahi",
-  ],
+  "Fish Oil": ["Barred Knifejaw", "Trout", "Coelacanth", "Saw Shark"],
+  "Crab Stick": ["Barred Knifejaw", "Whale Shark", "White Shark", "Parrotfish"],
 };
 
 export const isGuaranteedBait = (
@@ -792,10 +798,7 @@ export const isGuaranteedBait = (
   return GUARANTEED_BAIT.includes(bait as GuaranteedBait);
 };
 
-export const getSeasonalGuaranteedCatch = (
-  bait: FishingBait,
-  season: TemperateSeasonName,
-) => {
+export const getSeasonalGuaranteedCatch = (bait: FishingBait) => {
   if (!isGuaranteedBait(bait)) return [];
 
   return GUARANTEED_CATCH_BY_BAIT[bait];
