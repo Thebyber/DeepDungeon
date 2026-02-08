@@ -2,8 +2,7 @@ import mapJson from "assets/map/DeepDungeonMap1.json";
 import tilesetconfig from "assets/map/Tileset-deep-dungeon.json";
 import { SceneId } from "features/world/mmoMachine";
 import { BaseScene, NPCBumpkin } from "features/world/scenes/BaseScene";
-import { MachineInterpreter } from "./lib/portalMachine";
-
+import { GridMovement } from "./lib/GridMovement";
 export const NPCS: NPCBumpkin[] = [
   {
     x: 380,
@@ -15,6 +14,7 @@ export const NPCS: NPCBumpkin[] = [
 
 export class DeepDungeonScene extends BaseScene {
   sceneId: SceneId = "deep_dungeon";
+  private gridMovement?: GridMovement;
 
   constructor() {
     super({
@@ -24,7 +24,6 @@ export class DeepDungeonScene extends BaseScene {
         imageKey: "Tileset-deep-dungeon",
         defaultTilesetConfig: tilesetconfig,
       },
-      audio: { fx: { walk_key: "dirt_footstep" } },
     });
   }
 
@@ -33,14 +32,38 @@ export class DeepDungeonScene extends BaseScene {
   }
 
   async create() {
-    this.map = this.make.tilemap({
-      key: "Tileset-deep-dungeon",
-    });
-
+    this.map = this.make.tilemap({ key: "deep_dungeon" });
     super.create();
+
+    if (this.currentPlayer) {
+      // Corregimos el error de tipado del body
+      const body = this.currentPlayer.body as Phaser.Physics.Arcade.Body;
+      if (body) {
+        body.enable = false;
+      }
+
+      this.gridMovement = new GridMovement(
+        this,
+        this.currentPlayer,
+        16,
+        this.layers,
+      );
+    }
   }
 
-  public get portalService() {
-    return this.registry.get("portalService") as MachineInterpreter | undefined;
+  update() {
+    // Anulamos velocidad por si acaso
+    const body = this.currentPlayer?.body as Phaser.Physics.Arcade.Body;
+    if (body) {
+      body.setVelocity(0, 0);
+    }
+
+    super.update();
+
+    if (this.cursorKeys) {
+      // Pasamos las teclas como un Record para evitar conflictos de tipos
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      this.gridMovement?.handleInput(this.cursorKeys as any);
+    }
   }
 }
