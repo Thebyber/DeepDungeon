@@ -5,8 +5,6 @@ import { PIXEL_SCALE } from "features/game/lib/constants";
 import { SUNNYSIDE } from "assets/sunnyside";
 import { goHome } from "../../lib/portalUtil";
 import { HudContainer } from "components/ui/HudContainer";
-import { Balances } from "components/Balances";
-import Decimal from "decimal.js-light";
 
 import { Inventory } from "features/island/hud/components/inventory/Inventory";
 
@@ -21,7 +19,6 @@ export const DeepDungeonHUD: React.FC = () => {
   return (
     <>
       <HudContainer>
-        
         <Inventory
           state={portalState.context.state}
           isFarming={false}

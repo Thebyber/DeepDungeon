@@ -7,7 +7,7 @@ import debounce from "lodash.debounce";
 import { Player } from "../types/Room";
 import { NPCName, acknowledgedNPCs } from "lib/npcs";
 import { ReactionName } from "features/pumpkinPlaza/components/Reactions";
-import { getAnimationUrl } from "../lib/animations";
+import { ANIMATION, getAnimationUrl } from "../lib/animations";
 import {
   FactionName,
   InventoryItemName,
@@ -18,6 +18,8 @@ import { CONFIG } from "lib/config";
 import { formatNumber } from "lib/utils/formatNumber";
 import { KNOWN_IDS } from "features/game/types";
 import { getTradeableDisplay } from "features/marketplace/lib/tradeables";
+import { PLAYER_DAMAGE } from "features/portal/deepdungeon/DeepDungeonConstants";
+import { onAnimationComplete } from "features/portal/deepdungeon/DeepDungeonConstants";
 
 const NAME_ALIASES: Partial<Record<NPCName, string>> = {
   "pumpkin' pete": "pete",
@@ -81,6 +83,28 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
   private frontAuraAnimationKey: string | undefined;
   private backAuraAnimationKey: string | undefined;
   private direction: "left" | "right" = "right";
+
+  private carryingSpriteKey: string | undefined;
+  private carryingIdleSpriteKey: string | undefined;
+  private deathSpriteKey: string | undefined;
+  private attackSpriteKey: string | undefined;
+  private miningSpriteKey: string | undefined;
+  private hurtSpriteKey: string | undefined;
+  private carryingAnimationKey: string | undefined;
+  private carryingIdleAnimationKey: string | undefined;
+  private deathAnimationKey: string | undefined;
+  private attackAnimationKey: string | undefined;
+  private miningAnimationKey: string | undefined;
+  private hurtAnimationKey: string | undefined;
+  private damage = structuredClone(PLAYER_DAMAGE);
+  private frameRateAttack!: number;
+  doubleDamageChance = 0;
+  dodgeAttackChance = 0;
+  isHurting = false;
+  isAttacking = false;
+  isMining = false;
+  isBurning = false;
+  canHealWithGates = false;
 
   constructor({
     scene,
@@ -233,6 +257,20 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
     this.waveAnimationKey = `${this.spriteKey}-bumpkin-wave`;
     this.cheerAnimationKey = `${this.spriteKey}-bumpkin-cheer`; // Jump animation for now
 
+    //Deep Dungeon
+    this.carryingSpriteKey = `${this.spriteKey}-bumpkin-carrying-sheet`;
+    this.carryingIdleSpriteKey = `${this.spriteKey}-bumpkin-carrying-idle-sheet`;
+    this.deathSpriteKey = `${this.spriteKey}-bumpkin-death-sheet`;
+    this.attackSpriteKey = `${this.spriteKey}-bumpkin-attack-sheet`;
+    this.miningSpriteKey = `${this.spriteKey}-bumpkin-mining-sheet`;
+    this.hurtSpriteKey = `${this.spriteKey}-bumpkin-hurt-sheet`;
+    this.carryingAnimationKey = `${this.spriteKey}-bumpkin-carrying`;
+    this.carryingIdleAnimationKey = `${this.spriteKey}-bumpkin-carrying-idle`;
+    this.deathAnimationKey = `${this.spriteKey}-bumpkin-death`;
+    this.attackAnimationKey = `${this.spriteKey}-bumpkin-attack`;
+    this.miningAnimationKey = `${this.spriteKey}-bumpkin-mining`;
+    this.hurtAnimationKey = `${this.spriteKey}-bumpkin-hurt`;
+
     await buildNPCSheets({
       parts: this.clothing,
     }); //Removing this causes Aura to not show onload
@@ -329,6 +367,112 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
           }
         },
       );
+    }
+
+    // Deep Dungeon
+    /* Carry
+    if (scene.textures.exists(this.carryingSpriteKey)) {
+      this.createCarryingAnimation();
+    } else {
+      const url = getAnimationUrl(this.clothing, "carry_none");
+      const carryingLoader = scene.load.spritesheet(
+        this.carryingSpriteKey,
+        url,
+        {
+          frameWidth: 96,
+          frameHeight: 64,
+        },
+      );
+
+      carryingLoader.on(Phaser.Loader.Events.COMPLETE, () => {
+        this.createCarryingAnimation();
+        carryingLoader.removeAllListeners();
+      });
+    }
+
+    // Carry idle
+    if (scene.textures.exists(this.carryingIdleSpriteKey)) {
+      this.createCarryingIdleAnimation();
+    } else {
+      const url = getAnimationUrl(this.clothing, "carry_none_idle");
+      const carryingIdleLoader = scene.load.spritesheet(
+        this.carryingIdleSpriteKey,
+        url,
+        {
+          frameWidth: 96,
+          frameHeight: 64,
+        },
+      );
+
+      carryingIdleLoader.on(Phaser.Loader.Events.COMPLETE, () => {
+        this.createCarryingIdleAnimation();
+        carryingIdleLoader.removeAllListeners();
+      });
+    }*/
+
+    // Death
+    if (scene.textures.exists(this.deathSpriteKey)) {
+      this.createDeathAnimation();
+    } else {
+      const url = getAnimationUrl(this.clothing, [ANIMATION.death]);
+      const deathLoader = scene.load.spritesheet(this.deathSpriteKey, url, {
+        frameWidth: 96,
+        frameHeight: 64,
+      });
+
+      deathLoader.on(Phaser.Loader.Events.COMPLETE, () => {
+        this.createDeathAnimation();
+        deathLoader.removeAllListeners();
+      });
+    }
+
+    // Attack
+    if (scene.textures.exists(this.attackSpriteKey)) {
+      this.createAttackAnimation();
+    } else {
+      const url = getAnimationUrl(this.clothing, ["attack"]);
+      const attackLoader = scene.load.spritesheet(this.attackSpriteKey, url, {
+        frameWidth: 96,
+        frameHeight: 64,
+      });
+
+      attackLoader.on(Phaser.Loader.Events.COMPLETE, () => {
+        this.createAttackAnimation();
+        attackLoader.removeAllListeners();
+      });
+      //console.log("Animación 'attack' lista para usar");
+    }
+
+    // Mining
+    if (scene.textures.exists(this.miningSpriteKey)) {
+      this.createMiningAnimation();
+    } else {
+      const url = getAnimationUrl(this.clothing, [ANIMATION.mining]);
+      const miningLoader = scene.load.spritesheet(this.miningSpriteKey, url, {
+        frameWidth: 96,
+        frameHeight: 64,
+      });
+
+      miningLoader.on(Phaser.Loader.Events.COMPLETE, () => {
+        this.createMiningAnimation();
+        miningLoader.removeAllListeners();
+      });
+    }
+
+    // Hurt
+    if (scene.textures.exists(this.hurtSpriteKey)) {
+      this.createHurtAnimation();
+    } else {
+      const url = getAnimationUrl(this.clothing, [ANIMATION.hurt]);
+      const hurtLoader = scene.load.spritesheet(this.hurtSpriteKey, url, {
+        frameWidth: 96,
+        frameHeight: 64,
+      });
+
+      hurtLoader.on(Phaser.Loader.Events.COMPLETE, () => {
+        this.createHurtAnimation();
+        hurtLoader.removeAllListeners();
+      });
     }
 
     scene.load.start();
@@ -448,6 +592,109 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
         end,
       }),
       repeat: 2,
+      frameRate: 10,
+    });
+  }
+  //Deep Dungeon
+  private createCarryingAnimation() {
+    if (!this.scene || !this.scene.anims) return;
+
+    this.scene.anims.create({
+      key: this.carryingAnimationKey,
+      frames: this.scene.anims.generateFrameNumbers(
+        this.carryingSpriteKey as string,
+        {
+          start: 0,
+          end: 7,
+        },
+      ),
+      repeat: -1,
+      frameRate: 10,
+    });
+  }
+
+  private createCarryingIdleAnimation() {
+    if (!this.scene || !this.scene.anims) return;
+
+    this.scene.anims.create({
+      key: this.carryingIdleAnimationKey,
+      frames: this.scene.anims.generateFrameNumbers(
+        this.carryingIdleSpriteKey as string,
+        {
+          start: 0,
+          end: 7,
+        },
+      ),
+      repeat: -1,
+      frameRate: 10,
+    });
+  }
+
+  private createDeathAnimation() {
+    if (!this.scene || !this.scene.anims) return;
+
+    this.scene.anims.create({
+      key: this.deathAnimationKey,
+      frames: this.scene.anims.generateFrameNumbers(
+        this.deathSpriteKey as string,
+        {
+          start: 0,
+          end: 12,
+        },
+      ),
+      repeat: 0,
+      frameRate: 10,
+    });
+  }
+
+  private createAttackAnimation(frameRate = 12) {
+    if (!this.scene || !this.scene.anims) return;
+    this.frameRateAttack = frameRate;
+
+    this.scene.anims.create({
+      key: this.attackAnimationKey,
+      frames: this.scene.anims.generateFrameNumbers(
+        this.attackSpriteKey as string,
+        {
+          start: 0,
+          end: 7,
+        },
+      ),
+      repeat: 0,
+      frameRate: frameRate,
+    });
+  }
+
+  private createMiningAnimation() {
+    if (!this.scene || !this.scene.anims) return;
+
+    this.scene.anims.create({
+      key: this.miningAnimationKey,
+      frames: this.scene.anims.generateFrameNumbers(
+        this.miningSpriteKey as string,
+        {
+          start: 0,
+          end: 7,
+        },
+      ),
+      repeat: 0,
+      frameRate: 12,
+    });
+  }
+
+  private createHurtAnimation() {
+    if (!this.scene || !this.scene.anims) return;
+
+    this.scene.anims.create({
+      key: this.hurtAnimationKey,
+      frames: this.scene.anims.generateFrameNumbers(
+        this.hurtSpriteKey as string,
+        {
+          start: 0,
+          end: 7,
+        },
+      ),
+      repeat: 0,
       frameRate: 10,
     });
   }
@@ -1174,5 +1421,145 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
         }
       },
     );
+  }
+
+  // Halloween
+  public carry() {
+    if (
+      this.sprite?.anims &&
+      this.scene?.anims.exists(this.carryingAnimationKey as string) &&
+      this.sprite?.anims.getName() !== this.carryingAnimationKey
+    ) {
+      try {
+        this.sprite.anims.play(this.carryingAnimationKey as string, true);
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.log("Bumpkin Container: Error playing carry animation: ", e);
+      }
+    }
+  }
+
+  public carryIdle() {
+    if (
+      this.sprite?.anims &&
+      this.scene?.anims.exists(this.carryingIdleAnimationKey as string) &&
+      this.sprite?.anims.getName() !== this.carryingIdleAnimationKey
+    ) {
+      try {
+        this.sprite.anims.play(this.carryingIdleAnimationKey as string, true);
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.log(
+          "Bumpkin Container: Error playing carry idle animation: ",
+          e,
+        );
+      }
+    }
+  }
+
+  public dead() {
+    if (
+      this.sprite?.anims &&
+      this.scene?.anims.exists(this.deathAnimationKey as string) &&
+      this.sprite?.anims.getName() !== this.deathAnimationKey
+    ) {
+      try {
+        //this.addSound("deathPlayer").play();
+        this.sprite.anims.play(this.deathAnimationKey as string, true);
+        onAnimationComplete(
+          this.sprite,
+          this.deathAnimationKey as string,
+          () => {
+            //this.portalService?.send("GAME_OVER");
+          },
+        );
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.log(
+          "Bumpkin Container: Error playing carry idle animation: ",
+          e,
+        );
+      }
+    }
+  }
+
+  public attack() {
+    //this.addSound("sword").play();
+    if (
+      this.sprite?.anims &&
+      this.scene?.anims.exists(this.attackAnimationKey as string) &&
+      this.sprite?.anims.getName() !== this.attackAnimationKey
+    ) {
+      try {
+        //this.disableTools("sword");
+        this.isAttacking = true;
+        //this.enableSword(true);
+        this.sprite.anims.play(this.attackAnimationKey as string, true);
+        onAnimationComplete(
+          this.sprite,
+          this.attackAnimationKey as string,
+          () => {
+            this.isAttacking = false;
+            //this.enableSword(false);
+            //EventBus.emit("animation-attack-completed");
+          },
+        );
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.log("Bumpkin Container: Error playing attack animation: ", e);
+      }
+    }
+  }
+
+  public mining() {
+    //this.addSound("pickaxe").play();
+    if (
+      this.sprite?.anims &&
+      this.scene?.anims.exists(this.miningAnimationKey as string) &&
+      this.sprite?.anims.getName() !== this.miningAnimationKey
+    ) {
+      try {
+        //this.disableTools("pickaxe");
+        this.isMining = true;
+        //this.enablePickaxe(true);
+        this.sprite.anims.play(this.miningAnimationKey as string, true);
+        onAnimationComplete(
+          this.sprite,
+          this.miningAnimationKey as string,
+          () => {
+            this.isMining = false;
+            // this.enablePickaxe(false);
+            //EventBus.emit("animation-mining-completed");
+          },
+        );
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.log("Bumpkin Container: Error playing mining animation: ", e);
+      }
+    }
+  }
+
+  public hurt() {
+    //this.addSound("hurt").play();
+    if (
+      this.sprite?.anims &&
+      this.scene?.anims.exists(this.hurtAnimationKey as string) &&
+      this.sprite?.anims.getName() !== this.hurtAnimationKey
+    ) {
+      try {
+        this.isHurting = true;
+        this.isAttacking = false;
+        this.isMining = false;
+        this.sprite.anims.play(this.hurtAnimationKey as string, false);
+        onAnimationComplete(
+          this.sprite,
+          this.hurtAnimationKey as string,
+          () => (this.isHurting = false),
+        );
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.log("Bumpkin Container: Error playing hurt animation: ", e);
+      }
+    }
   }
 }
