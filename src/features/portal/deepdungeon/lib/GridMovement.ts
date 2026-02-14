@@ -1,11 +1,6 @@
 import { BumpkinContainer } from "src/features/world/containers/BumpkinContainer";
 import { PlayerState } from "../lib/playerState";
 
-interface AttackableBumpkin extends BumpkinContainer {
-  attack: () => void;
-  sprite: Phaser.GameObjects.Sprite;
-}
-
 export class GridMovement {
   private scene: Phaser.Scene;
   private currentPlayer: BumpkinContainer;
@@ -75,7 +70,7 @@ export class GridMovement {
     );
 
     if (targetEnemy) {
-      const player = this.currentPlayer as AttackableBumpkin;
+      const player = this.currentPlayer;
       player.attack();
 
       // 2. Feedback de color (opcional, ayuda a saber si el código llega aquí)
@@ -87,25 +82,24 @@ export class GridMovement {
       // 3. Daño al enemigo
       targetEnemy.takeDamage(10);
       // 4. Contraataque enemigo con ligero delay
-      this.scene.time.delayedCall(600, () => {
+      this.scene.time.delayedCall(800, () => {
         if (targetEnemy.active) {
           targetEnemy.attackPlayer();
           player.hurt();
         }
       });
-
       return;
     }
 
     // 5. SI PASA TODO, MOVER
     this.isMoving = true;
     playerState.consumeEnergy(1);
-
+    this.currentPlayer.walk();
     this.scene.tweens.add({
       targets: this.currentPlayer,
       x: nextGridX + this.OFFSET_X,
       y: nextGridY + this.OFFSET_Y,
-      duration: 150,
+      duration: 200,
       ease: "Linear",
       onComplete: () => {
         this.isMoving = false;
@@ -113,7 +107,6 @@ export class GridMovement {
         if ((this.scene as any).packetSentAt !== undefined) {
           (this.scene as any).packetSentAt = 0;
         }
-
         this.scene.events.emit("PLAYER_MOVED");
       },
     });

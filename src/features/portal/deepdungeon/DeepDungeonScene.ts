@@ -21,6 +21,7 @@ export class DeepDungeonScene extends BaseScene {
   sceneId: SceneId = "deep_dungeon";
   private gridMovement?: GridMovement;
   private enemies: EnemyContainer[] = [];
+  private playerKeys?: Record<string, Phaser.Input.Keyboard.Key>;
   constructor() {
     super({
       name: "deep_dungeon",
@@ -102,6 +103,17 @@ export class DeepDungeonScene extends BaseScene {
         16,
         this.layers,
       );
+      //Asignacion de teclas
+      if (this.input.keyboard) {
+        this.playerKeys = {
+          ATTACK: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E),
+          HURT: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.TWO),
+          DEATH: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ONE),
+          MINE: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z),
+          DIG: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X),
+          AXE: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.V),
+        };
+      }
 
       // 2. Crear un esqueleto de prueba
       const skeleton = new EnemyContainer({
@@ -140,14 +152,9 @@ export class DeepDungeonScene extends BaseScene {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       this.gridMovement?.handleInput(this.cursorKeys as any);
     }
-    if (this.cursorKeys) {
-      this.cursorKeys.left.isDown = false;
-      this.cursorKeys.right.isDown = false;
-      this.cursorKeys.up.isDown = false;
-      this.cursorKeys.down.isDown = false;
-    }
     this.loadBumpkinAnimations();
     super.update();
+    this.handlePlayerActions();
   }
   private loadBumpkinAnimations() {
     if (!this.currentPlayer) return;
@@ -156,10 +163,44 @@ export class DeepDungeonScene extends BaseScene {
     if (
       !this.currentPlayer.isHurting &&
       !this.currentPlayer.isAttacking &&
-      !this.currentPlayer.isMining
+      !this.currentPlayer.isMining &&
+      !this.currentPlayer.isAxe &&
+      !this.currentPlayer.isHammering &&
+      !this.currentPlayer.isSwimming &&
+      !this.currentPlayer.isDrilling &&
+      !this.currentPlayer.isDigging &&
+      !this.currentPlayer.isWalking
     ) {
       animation = "idle";
     }
     this.currentPlayer?.[animation]?.();
+  }
+  private handlePlayerActions() {
+    if (!this.currentPlayer || !this.playerKeys) return;
+
+    const player = this.currentPlayer; // Usaremos una interfaz luego para evitar any
+
+    // Al presionar "E" (JustDown para que no se repita en bucle)
+    if (Phaser.Input.Keyboard.JustDown(this.playerKeys.ATTACK)) {
+      player.attack();
+    }
+    if (Phaser.Input.Keyboard.JustDown(this.playerKeys.AXE)) {
+      player.axe();
+    }
+    if (Phaser.Input.Keyboard.JustDown(this.playerKeys.MINE)) {
+      player.mining();
+    }
+    if (Phaser.Input.Keyboard.JustDown(this.playerKeys.DIG)) {
+      player.dig();
+    }
+    // Al presionar "2"
+    if (Phaser.Input.Keyboard.JustDown(this.playerKeys.HURT)) {
+      player.hurt();
+    }
+
+    // Al presionar "1"
+    if (Phaser.Input.Keyboard.JustDown(this.playerKeys.DEATH)) {
+      player.dead();
+    }
   }
 }

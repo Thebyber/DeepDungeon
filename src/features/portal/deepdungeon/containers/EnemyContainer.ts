@@ -39,7 +39,9 @@ export class EnemyContainer extends Phaser.GameObjects.Container {
     this.scene.add.existing(this);
   }
 
-  private playAnimationEnemies(state: "idle" | "walk" | "attack" | "hurt") {
+  private playAnimationEnemies(
+    state: "idle" | "walk" | "attack" | "hurt" | "axe" | "dead",
+  ) {
     const name = this.enemyType.toLowerCase(); // "skeleton"
     const key = `${name}_${state}_anim`;
 

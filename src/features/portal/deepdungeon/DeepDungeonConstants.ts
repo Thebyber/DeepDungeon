@@ -4,7 +4,13 @@ export type AnimationKeys =
   | "carry"
   | "carryIdle"
   | "attack"
-  | "mining";
+  | "mining"
+  | "axe"
+  | "hammering"
+  | "swimming"
+  | "drill"
+  | "dig"
+  | "dead";
 
 export const PLAYER_DAMAGE = 1;
 

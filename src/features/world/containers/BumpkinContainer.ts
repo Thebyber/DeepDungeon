@@ -91,20 +91,33 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
   private attackSpriteKey: string | undefined;
   private miningSpriteKey: string | undefined;
   private hurtSpriteKey: string | undefined;
+  private axeSpriteKey: string | undefined;
+  private hammeringSpriteKey: string | undefined;
+  private swimmingSpriteKey: string | undefined;
   private carryingAnimationKey: string | undefined;
   private carryingIdleAnimationKey: string | undefined;
   private deathAnimationKey: string | undefined;
   private attackAnimationKey: string | undefined;
   private miningAnimationKey: string | undefined;
   private hurtAnimationKey: string | undefined;
+  private axeAnimationKey: string | undefined;
+  private hammeringAnimationKey: string | undefined;
+  private swimmingAnimationKey: string | undefined;
   private damage = structuredClone(PLAYER_DAMAGE);
   private frameRateAttack!: number;
   doubleDamageChance = 0;
   dodgeAttackChance = 0;
   isHurting = false;
   isAttacking = false;
+  isAxe = false;
   isMining = false;
   isBurning = false;
+  isHammering = false;
+  isSwimming = false;
+  isDrilling = false;
+  isDigging = false;
+  isMoving = false;
+  isWalking = false;
   canHealWithGates = false;
 
   constructor({
@@ -265,12 +278,18 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
     this.attackSpriteKey = `${this.spriteKey}-bumpkin-attack-sheet`;
     this.miningSpriteKey = `${this.spriteKey}-bumpkin-mining-sheet`;
     this.hurtSpriteKey = `${this.spriteKey}-bumpkin-hurt-sheet`;
+    this.axeSpriteKey = `${this.spriteKey}-bumpkin-axe-sheet`;
+    this.hammeringSpriteKey = `${this.spriteKey}-bumpkin-hammering-sheet`;
+    this.swimmingSpriteKey = `${this.spriteKey}-bumpkin-swimming-sheet`;
     this.carryingAnimationKey = `${this.spriteKey}-bumpkin-carrying`;
     this.carryingIdleAnimationKey = `${this.spriteKey}-bumpkin-carrying-idle`;
     this.deathAnimationKey = `${this.spriteKey}-bumpkin-death`;
     this.attackAnimationKey = `${this.spriteKey}-bumpkin-attack`;
     this.miningAnimationKey = `${this.spriteKey}-bumpkin-mining`;
     this.hurtAnimationKey = `${this.spriteKey}-bumpkin-hurt`;
+    this.axeAnimationKey = `${this.spriteKey}-bumpkin-axe`;
+    this.hammeringAnimationKey = `${this.spriteKey}-bumpkin-hammering`;
+    this.swimmingAnimationKey = `${this.spriteKey}-bumpkin-swimming`;
 
     await buildNPCSheets({
       parts: this.clothing,
@@ -305,6 +324,9 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
         "walking",
         "dig",
         "drilling",
+        "axe",
+        "swimming",
+        "hammering",
       ]);
       const idleLoader = scene.load.spritesheet(this.spriteKey, url, {
         frameWidth: 96,
@@ -475,6 +497,60 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
       });
     }
 
+    // Axe
+    if (scene.textures.exists(this.axeSpriteKey)) {
+      this.createAxeAnimation();
+    } else {
+      const url = getAnimationUrl(this.clothing, [ANIMATION.axe]);
+      const axeLoader = scene.load.spritesheet(this.axeSpriteKey, url, {
+        frameWidth: 96,
+        frameHeight: 64,
+      });
+
+      axeLoader.on(Phaser.Loader.Events.COMPLETE, () => {
+        this.createAxeAnimation();
+        axeLoader.removeAllListeners();
+      });
+    }
+    // Hammering
+    if (scene.textures.exists(this.hammeringSpriteKey)) {
+      this.createHammeringAnimation();
+    } else {
+      const url = getAnimationUrl(this.clothing, [ANIMATION.hammering]);
+      const hammeringLoader = scene.load.spritesheet(
+        this.hammeringSpriteKey,
+        url,
+        {
+          frameWidth: 96,
+          frameHeight: 64,
+        },
+      );
+
+      hammeringLoader.on(Phaser.Loader.Events.COMPLETE, () => {
+        this.createHammeringAnimation();
+        hammeringLoader.removeAllListeners();
+      });
+    }
+    // Swimming
+    if (scene.textures.exists(this.swimmingSpriteKey)) {
+      this.createSwimmingAnimation();
+    } else {
+      const url = getAnimationUrl(this.clothing, [ANIMATION.swimming]);
+      const swimmingLoader = scene.load.spritesheet(
+        this.swimmingSpriteKey,
+        url,
+        {
+          frameWidth: 96,
+          frameHeight: 64,
+        },
+      );
+
+      swimmingLoader.on(Phaser.Loader.Events.COMPLETE, () => {
+        this.createSwimmingAnimation();
+        swimmingLoader.removeAllListeners();
+      });
+    }
+
     scene.load.start();
   }
 
@@ -488,7 +564,7 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
         end,
       }),
       frameRate: 10,
-      repeat: -1,
+      repeat: 0,
     });
   }
 
@@ -502,7 +578,7 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
         end,
       }),
       frameRate: 10,
-      repeat: -1,
+      repeat: 0,
     });
   }
 
@@ -563,7 +639,7 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
         start,
         end,
       }),
-      repeat: -1,
+      repeat: 0,
       frameRate: 10,
     });
   }
@@ -678,7 +754,7 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
         },
       ),
       repeat: 0,
-      frameRate: 12,
+      frameRate: 10,
     });
   }
 
@@ -689,6 +765,52 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
       key: this.hurtAnimationKey,
       frames: this.scene.anims.generateFrameNumbers(
         this.hurtSpriteKey as string,
+        {
+          start: 0,
+          end: 7,
+        },
+      ),
+      repeat: 0,
+      frameRate: 10,
+    });
+  }
+  private createAxeAnimation() {
+    if (!this.scene || !this.scene.anims) return;
+
+    this.scene.anims.create({
+      key: this.axeAnimationKey,
+      frames: this.scene.anims.generateFrameNumbers(
+        this.axeSpriteKey as string,
+        {
+          start: 0,
+          end: 7,
+        },
+      ),
+      repeat: 0,
+      frameRate: 10,
+    });
+  }
+  private createSwimmingAnimation(frameRate = 12) {
+    if (!this.scene || !this.scene.anims) return;
+    this.scene.anims.create({
+      key: this.swimmingAnimationKey,
+      frames: this.scene.anims.generateFrameNumbers(
+        this.swimmingSpriteKey as string,
+        {
+          start: 0,
+          end: 7,
+        },
+      ),
+      repeat: 0,
+      frameRate: 10,
+    });
+  }
+  private createHammeringAnimation(frameRate = 12) {
+    if (!this.scene || !this.scene.anims) return;
+    this.scene.anims.create({
+      key: this.hammeringAnimationKey,
+      frames: this.scene.anims.generateFrameNumbers(
+        this.hammeringSpriteKey as string,
         {
           start: 0,
           end: 7,
@@ -1200,8 +1322,12 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
       this.sprite?.anims.getName() !== this.digAnimationKey
     ) {
       try {
+        this.isDigging = true;
         this.sprite.anims.play(this.digAnimationKey as string, true);
-        this.scene.sound.play("dig", { volume: 0.1 });
+        //this.scene.sound.play("dig", { volume: 0.1 });
+        onAnimationComplete(this.sprite, this.digAnimationKey as string, () => {
+          this.isDigging = false;
+        });
       } catch (e) {
         // eslint-disable-next-line no-console
         console.log("Bumpkin Container: Error playing dig animation: ", e);
@@ -1216,8 +1342,16 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
       this.sprite?.anims.getName() !== this.drillAnimationKey
     ) {
       try {
+        this.isDrilling = true;
         this.sprite.anims.play(this.drillAnimationKey as string, true);
-        this.scene.sound.play("drill", { volume: 0.1 });
+        onAnimationComplete(
+          this.sprite,
+          this.drillAnimationKey as string,
+          () => {
+            this.isDrilling = false;
+          },
+        );
+        //this.scene.sound.play("drill", { volume: 0.1 });
       } catch (e) {
         // eslint-disable-next-line no-console
         console.log("Bumpkin Container: Error playing drill animation: ", e);
@@ -1232,20 +1366,28 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
       this.sprite?.anims.getName() !== this.walkingAnimationKey
     ) {
       try {
+        this.isWalking = true;
         this.sprite.anims.play(this.walkingAnimationKey as string, true);
+        onAnimationComplete(
+          this.sprite,
+          this.walkingAnimationKey as string,
+          () => {
+            this.isWalking = false;
+          },
+        );
       } catch (e) {
         // eslint-disable-next-line no-console
         console.log("Bumpkin Container: Error playing walk animation: ", e);
       }
     }
-
+    /*
     if (this.frontParticles?.active) {
       this.frontParticles.emitting = true;
     }
 
     if (this.backParticles?.active) {
       this.backParticles.emitting = true;
-    }
+    }*/
   }
 
   public isInteracting() {
@@ -1550,6 +1692,10 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
         this.isHurting = true;
         this.isAttacking = false;
         this.isMining = false;
+        this.isHammering = false;
+        this.isAxe = false;
+        this.isDrilling = false;
+        this.isDigging = false;
         this.sprite.anims.play(this.hurtAnimationKey as string, false);
         onAnimationComplete(
           this.sprite,
@@ -1559,6 +1705,83 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
       } catch (e) {
         // eslint-disable-next-line no-console
         console.log("Bumpkin Container: Error playing hurt animation: ", e);
+      }
+    }
+  }
+  public axe() {
+    //this.addSound("sword").play();
+    if (
+      this.sprite?.anims &&
+      this.scene?.anims.exists(this.axeAnimationKey as string) &&
+      this.sprite?.anims.getName() !== this.axeAnimationKey
+    ) {
+      try {
+        //this.disableTools("sword");
+        this.isAxe = true;
+        //this.enableSword(true);
+        this.sprite.anims.play(this.axeAnimationKey as string, true);
+        onAnimationComplete(this.sprite, this.axeAnimationKey as string, () => {
+          this.isAxe = false;
+          //this.enableSword(false);
+          EventBus.emit("animation-axe-completed");
+        });
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.log("Bumpkin Container: Error playing attack animation: ", e);
+      }
+    }
+  }
+  public hammering() {
+    //this.addSound("pickaxe").play();
+    if (
+      this.sprite?.anims &&
+      this.scene?.anims.exists(this.hammeringAnimationKey as string) &&
+      this.sprite?.anims.getName() !== this.hammeringAnimationKey
+    ) {
+      try {
+        //this.disableTools("pickaxe");
+        this.isHammering = true;
+        //this.enablePickaxe(true);
+        this.sprite.anims.play(this.hammeringAnimationKey as string, true);
+        onAnimationComplete(
+          this.sprite,
+          this.hammeringAnimationKey as string,
+          () => {
+            this.isHammering = false;
+            // this.enablePickaxe(false);
+            EventBus.emit("animation-hammering-completed");
+          },
+        );
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.log("Bumpkin Container: Error playing mining animation: ", e);
+      }
+    }
+  }
+  public swimming() {
+    //this.addSound("pickaxe").play();
+    if (
+      this.sprite?.anims &&
+      this.scene?.anims.exists(this.swimmingAnimationKey as string) &&
+      this.sprite?.anims.getName() !== this.swimmingAnimationKey
+    ) {
+      try {
+        //this.disableTools("pickaxe");
+        this.isSwimming = true;
+        //this.enablePickaxe(true);
+        this.sprite.anims.play(this.swimmingAnimationKey as string, true);
+        onAnimationComplete(
+          this.sprite,
+          this.swimmingAnimationKey as string,
+          () => {
+            this.isSwimming = false;
+            // this.enablePickaxe(false);
+            EventBus.emit("animation-swimming-completed");
+          },
+        );
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.log("Bumpkin Container: Error playing mining animation: ", e);
       }
     }
   }
