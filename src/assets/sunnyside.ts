@@ -581,6 +581,7 @@ export const SUNNYSIDE = {
     cancel: `${CONFIG.PROTECTED_IMAGE_URL}/icons/cancel.png`,
     close: `${CONFIG.PROTECTED_IMAGE_URL}/icons/close.png`,
     confirm: `${CONFIG.PROTECTED_IMAGE_URL}/icons/confirm.png`,
+    codex: `${CONFIG.PROTECTED_IMAGE_URL}/icons/codex.png`,
     disc_large: `${CONFIG.PROTECTED_IMAGE_URL}/icons/disc_large.png`,
     disc: `${CONFIG.PROTECTED_IMAGE_URL}/icons/disc.png`,
     discord: `${CONFIG.PROTECTED_IMAGE_URL}/icons/discord.png`,

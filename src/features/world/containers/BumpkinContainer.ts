@@ -107,17 +107,17 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
   private frameRateAttack!: number;
   doubleDamageChance = 0;
   dodgeAttackChance = 0;
-  isHurting = false;
-  isAttacking = false;
+  public isHurting = false;
+  public isAttacking = false;
   isAxe = false;
-  isMining = false;
+  public isMining = false;
   isBurning = false;
   isHammering = false;
-  isSwimming = false;
+  public isSwimming = false;
   isDrilling = false;
   isDigging = false;
-  isMoving = false;
-  isWalking = false;
+  public isMoving = false;
+  public isWalking = false;
   canHealWithGates = false;
 
   constructor({

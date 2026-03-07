@@ -1,6 +1,6 @@
 /* eslint-disable prettier/prettier */
 import { BumpkinContainer } from "src/features/world/containers/BumpkinContainer";
-import { PlayerState } from "../lib/playerState";
+import { DeepDungeonScene } from "../DeepDungeonScene";
 import { CrystalContainer } from "../containers/CrystalContainer";
 
 interface Enemy {
@@ -60,8 +60,12 @@ export class GridMovement {
   }
 
   private move(dx: number, dy: number) {
-    const playerState = PlayerState.getInstance();
-    if (playerState.getEnergy() <= 0) return;
+    // --- NUEVO: Acceso al servicio mediante la escena ---
+    const scene = this.scene as DeepDungeonScene;
+    const service = scene.portalService;
+    const stats = service?.state.context.stats;
+
+    if (!stats || stats.energy <= 0) return;
 
     // 1. Obtener posición base (sin offsets)
     const currentGridX = Math.floor(this.currentPlayer.x / 16) * 16;
@@ -90,8 +94,6 @@ export class GridMovement {
       waterLayer?.getTileAtWorldXY(nextGridX + 8, nextGridY + 8) !== null;
 
     // 2. COMPROBAR CRISTALES (Bloqueo y Minado)
-
-    const scene = this.scene as SceneWithEnemies;
 
     // Usamos Array.isArray para estar 100% seguros antes de llamar a .find()
     const crystals = Array.isArray(scene.crystals) ? scene.crystals : [];
@@ -122,6 +124,11 @@ export class GridMovement {
 
     if (targetEnemy) {
       const player = this.currentPlayer;
+      if (player.isAttacking || player.isHurting) {
+        //console.log("Acción bloqueada: Jugador ocupado");
+
+        return;
+      }
       player.attack();
 
       // 2. Feedback de color (opcional, ayuda a saber si el código llega aquí)
@@ -131,9 +138,9 @@ export class GridMovement {
       }*/
 
       // 3. Daño al enemigo
-      targetEnemy.takeDamage(PlayerState.getInstance().stats.attack);
+      targetEnemy.takeDamage(stats.attack);
       // 4. Contraataque enemigo con ligero delay
-      this.scene.time.delayedCall(800, () => {
+      this.scene.time.delayedCall(500, () => {
         // Comprobamos active (Phaser) y currentHp (tu lógica)
         if (
           targetEnemy &&
@@ -151,7 +158,9 @@ export class GridMovement {
 
     // 5. SI PASA TODO, MOVER
     this.isMoving = true;
-    playerState.consumeEnergy(1);
+    service?.send("UPDATE_STATS", {
+      stats: { energy: stats.energy - 1 },
+    });
     if (isWater) {
       //console.log("estoy en el agua");
       this.currentPlayer.swimming(); // Activa animación de nadar

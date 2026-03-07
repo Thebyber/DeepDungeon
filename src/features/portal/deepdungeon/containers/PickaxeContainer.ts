@@ -1,14 +1,5 @@
 import { BumpkinContainer } from "features/world/containers/BumpkinContainer";
 import { DeepDungeonScene } from "../DeepDungeonScene"; // Ajusta a tu escena
-import { PlayerState } from "../lib/playerState";
-
-interface PlayerStats {
-  pickaxes: number;
-}
-
-interface PlayerWithStats extends BumpkinContainer {
-  stats?: PlayerStats;
-}
 
 interface Props {
   x: number;
@@ -21,6 +12,7 @@ export class PickaxeContainer extends Phaser.GameObjects.Container {
   private player: BumpkinContainer;
   private sprite: Phaser.GameObjects.Sprite;
   public scene: DeepDungeonScene;
+  private isCollected: boolean = false;
 
   constructor({ x, y, scene, player }: Props) {
     super(scene, x, y);
@@ -62,19 +54,14 @@ export class PickaxeContainer extends Phaser.GameObjects.Container {
   }
 
   private collect() {
+    if (this.isCollected) return;
+    this.isCollected = true;
+
     // 1. Lógica global (para el HUD y persistencia)
-    PlayerState.getInstance().collectTool("pickaxe");
+    this.scene.portalService?.send("PICKAXE_FOUND", { amount: 1 });
 
     // 2. Lógica local (para que la escena de Phaser se entere INSTANTÁNEAMENTE)
     // Accedemos a las stats del objeto player que pasamos por Props
-    const playerWithStats = this.player as PlayerWithStats;
-    if (playerWithStats && playerWithStats.stats) {
-      playerWithStats.stats.pickaxes += 1;
-      //console.log( "Picos en inventario actualizados:",playerWithStats.stats.pickaxes,);
-    }
-
-    // 3. Notificar al HUD
-    window.dispatchEvent(new Event("inventoryUpdated"));
 
     this.destroy();
   }

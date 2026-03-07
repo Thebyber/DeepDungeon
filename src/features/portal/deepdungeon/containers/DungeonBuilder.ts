@@ -4,11 +4,15 @@ export class DungeonBuilder {
   private static readonly ZONE_SIZE = 16;
   private static readonly MAP_SIZE = 32;
 
+  /**
+   * Genera el mapa combinando cuadrantes aleatorios.
+   * @param level Opcional: para escalar la dificultad o tipos de mapas en el futuro.
+   */
   static generate(
     scene: Phaser.Scene,
     tilesetKey: string,
+    level: number = 1, // Añadimos el nivel como parámetro
   ): Phaser.Tilemaps.Tilemap {
-    // 1. Crear el mapa maestro vacío
     const map = scene.make.tilemap({
       tileWidth: 16,
       tileHeight: 16,
@@ -20,7 +24,9 @@ export class DungeonBuilder {
     const groundLayer = map.createBlankLayer("Ground", tileset!);
     const wallLayer = map.createBlankLayer("Wall", tileset!);
 
-    // 2. Definir los cuadrantes
+    // Si necesitas capas de decoración o agua, asegúrate de crearlas aquí también
+    // const waterLayer = map.createBlankLayer("Water", tileset!);
+
     const quadrants = [
       { zone: "zoneA", x: 0, y: 0 },
       { zone: "zoneB", x: this.ZONE_SIZE, y: 0 },
@@ -28,17 +34,21 @@ export class DungeonBuilder {
       { zone: "zoneC", x: this.ZONE_SIZE, y: this.ZONE_SIZE },
     ];
 
-    // 3. Rellenar cada cuadrante
     quadrants.forEach((q) => {
+      // Aquí podrías usar 'level' para elegir mapas más difíciles
       const randomMapNum = Math.floor(Math.random() * 3) + 1;
       const tempMapKey = `${q.zone}_map${randomMapNum}`;
       const tempMap = scene.make.tilemap({ key: tempMapKey });
 
       this.copyLayerData(tempMap, "Ground", groundLayer!, q.x, q.y);
       this.copyLayerData(tempMap, "Wall", wallLayer!, q.x, q.y);
+      // this.copyLayerData(tempMap, "Water", waterLayer!, q.x, q.y);
 
       tempMap.destroy();
     });
+
+    // IMPORTANTE: Configurar colisiones de una vez para la capa de muros
+    wallLayer?.setCollisionByExclusion([-1]);
 
     return map;
   }

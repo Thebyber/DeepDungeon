@@ -5,7 +5,6 @@ import { GridMovement } from "./lib/GridMovement";
 import { ENEMY_TYPES, EnemyType } from "./lib/Enemies";
 import { EnemyContainer } from "./containers/EnemyContainer";
 import { AnimationKeys } from "./DeepDungeonConstants";
-import { PlayerState } from "./lib/playerState";
 //import { ANIMATION } from "features/world/lib/animations";
 import { PickaxeContainer } from "./containers/PickaxeContainer";
 import { TrapContainer } from "./containers/TrapContainer";
@@ -13,6 +12,7 @@ import { StairContainer } from "./containers/StairContainer"; // Ajusta la ruta
 import { CrystalContainer } from "./containers/CrystalContainer"; // Ajusta la ruta
 import { LEVEL_DESIGNS } from "./DeepDungeonConstants";
 import { LEVEL_MAPS } from "./DeepDungeonConstants";
+import { MachineInterpreter } from "./lib/portalMachine";
 
 export const NPCS: NPCBumpkin[] = [
   {
@@ -36,6 +36,17 @@ export class DeepDungeonScene extends BaseScene {
   public crystals: CrystalContainer[] = [];
   private darknessMask?: Phaser.GameObjects.RenderTexture;
   private visionCircle?: Phaser.GameObjects.Graphics;
+  private backgroundMusic!: Phaser.Sound.BaseSound;
+
+  public get portalService() {
+    const service = this.registry.get("portalService");
+    if (!service) {
+      // Esto te ayudará a debuguear si el servicio se pierde
+      // console.warn("PortalService no encontrado en el registry");
+      return undefined;
+    }
+    return service as MachineInterpreter;
+  }
 
   constructor() {
     super({
@@ -47,18 +58,15 @@ export class DeepDungeonScene extends BaseScene {
     });
   }
   init(data: { level?: number }) {
-    // 1. Actualizamos la variable local
     this.currentLevel = data.level || 1;
     this.isTransitioning = false;
 
-    // 2. IMPORTANTE: Actualizar el estado global para que buildLevel lo lea bien
-    PlayerState.getInstance().setLevel(this.currentLevel);
+    // Ya no enviamos "UPDATE_STATS" aquí porque NEXT_MAP ya se encargó
+    // de subir el nivel y resetear los contadores.
 
-    // Limpieza de cache...
     if (this.cache.tilemap.has("deep_dungeon")) {
       this.cache.tilemap.remove("deep_dungeon");
     }
-    //console.log("Iniciando escena. Nivel lógico:", this.currentLevel);
   }
   preload() {
     // Usamos SIEMPRE la misma llave: "deep_dungeon"
@@ -85,11 +93,20 @@ export class DeepDungeonScene extends BaseScene {
 
     super.preload();
     this.load.image("stairs", "world/DeepDungeonAssets/Stairs.png");
+    //Music
+    // Background
+    this.load.audio(
+      "backgroundMusic",
+      "/world/DeepDungeonAssets/backgroundMusic.wav",
+    );
+
     //Trampas
     this.load.spritesheet("spikes", "world/DeepDungeonAssets/spikes.png", {
       frameWidth: 96,
       frameHeight: 64,
     });
+    //Heart icon
+    this.load.image("heart_icon", "world/DeepDungeonAssets/heart.png");
     //Enemies
     //Skeleton
     this.load.spritesheet(
@@ -100,7 +117,13 @@ export class DeepDungeonScene extends BaseScene {
         frameHeight: 13,
       },
     );
-    this.load.spritesheet("skeleton", "world/DeepDungeonAssets/skeleton.png", {
+    this.load.image("potion_attack", "world/DeepDungeonAssets/pickaxe.png");
+    this.load.image("shield_up", "world/DeepDungeonAssets/pickaxe.png");
+    this.load.image("energy_big", "world/DeepDungeonAssets/pickaxe.png");
+    this.load.image("energy_small", "world/DeepDungeonAssets/pickaxe.png");
+    this.load.image("crit_star", "world/DeepDungeonAssets/pickaxe.png");
+    this.load.image("pickaxe", "world/DeepDungeonAssets/pickaxe.png");
+    this.load.spritesheet("skeleton", "world/DeepDungeonAssets/pickaxe.png", {
       frameWidth: 96,
       frameHeight: 64,
     });
@@ -304,7 +327,17 @@ export class DeepDungeonScene extends BaseScene {
 
     // 4. Activar colisiones para el movimiento celda a celda
     if (this.currentPlayer?.gridMovement) {
-      this.currentPlayer.gridMovement.setCollidesWith([this.wallLayer]);
+      this.gridMovement = new GridMovement(
+        this,
+        this.currentPlayer,
+        16,
+        [this.wallLayer], // Asegúrate de que esto sea un Array de capas de colisión
+      );
+      this.backgroundMusic = this.sound.add("backgroundMusic", {
+        loop: true,
+        volume: 0.1,
+      });
+      this.backgroundMusic.play();
     }
 
     const levelData = LEVEL_MAPS[this.currentLevel];
@@ -316,13 +349,6 @@ export class DeepDungeonScene extends BaseScene {
       this.currentPlayer.setPosition(startX, startY);
       this.spawnStairsRandomly();
 
-      const player = this
-        .currentPlayer as unknown as Phaser.Physics.Arcade.Sprite;
-      (player as unknown as { onPreUpdate: () => void }).onPreUpdate = () => {};
-      // 2. Quitamos cualquier velocidad que la BaseScene intente aplicar
-      const body = this.currentPlayer.body as Phaser.Physics.Arcade.Body;
-      body.setVelocity(0, 0);
-      body.setMaxVelocity(0, 0);
       this.gridMovement = new GridMovement(
         this,
         this.currentPlayer,
@@ -342,9 +368,10 @@ export class DeepDungeonScene extends BaseScene {
       }
       //const playerState = PlayerState.getInstance();
       //const currentLevel = PlayerState.getInstance().getLevel();
+
       this.buildLevel(this.currentLevel);
       // Ahora sí, sincronizamos el estado global para el resto del juego
-      PlayerState.getInstance().setLevel(this.currentLevel);
+      //PlayerState.getInstance().setLevel(this.currentLevel);
 
       // 3. ESCUCHAR EL MOVIMIENTO
       this.events.on("PLAYER_MOVED", () => {
@@ -383,16 +410,20 @@ export class DeepDungeonScene extends BaseScene {
     if (!trapAtPos) return;
 
     // 3. ¡HAY TRAMPA! La activamos visualmente
-    trapAtPos.activate(PlayerState.getInstance().getLevel());
-
+    //trapAtPos.activate(PlayerState.getInstance().getLevel());
+    const currentLevel =
+      this.portalService?.state.context.stats.currentLevel || 1;
+    trapAtPos.activate(currentLevel);
     // 4. ¿EL JUGADOR PISÓ LA TRAMPA?
     if (this.currentPlayer) {
       const pTx = Math.floor(this.currentPlayer.x / 16);
       const pTy = Math.floor(this.currentPlayer.y / 16);
 
       if (tx === pTx && ty === pTy) {
-        const damage = PlayerState.getInstance().getLevel() <= 5 ? 2 : 5;
-        PlayerState.getInstance().consumeEnergy(damage);
+        //const damage = PlayerState.getInstance().getLevel() <= 5 ? 2 : 5;
+        //PlayerState.getInstance().consumeEnergy(damage);
+        const damage = currentLevel <= 5 ? 2 : 5;
+        this.portalService?.send("HIT_TRAP", { damage });
 
         if (this.currentPlayer.hurt) this.currentPlayer.hurt();
 
@@ -418,28 +449,33 @@ export class DeepDungeonScene extends BaseScene {
   }
   update() {
     super.update();
-    // Anulamos velocidad por si acaso
-    const body = this.currentPlayer?.body as Phaser.Physics.Arcade.Body;
+
+    if (!this.currentPlayer || !this.cursorKeys) return;
+
+    const body = this.currentPlayer.body as Phaser.Physics.Arcade.Body;
     if (body) {
       body.setVelocity(0, 0);
     }
-    if (this.cursorKeys) {
-      // Pasamos las teclas como un Record para evitar conflictos de tipos
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      this.gridMovement?.handleInput(this.cursorKeys as any);
-    }
-    this.loadBumpkinAnimations();
-    this.handlePlayerActions();
-    if (this.darknessMask && this.currentPlayer && this.visionCircle) {
-      // QUITAMOS el this.darknessMask.clear() y el .fill()
-      // Al no limpiar, los "borrados" se van acumulando
 
-      // Usamos las coordenadas reales del jugador en el mundo
-      // (Ya no restamos el scroll de la cámara)
+    // --- 1. FILTRO DE ESTADO ---
+    // Si el jugador está atacando o sufriendo daño, BLOQUEAMOS el input.
+    // Esto evita que "atropelles" enemigos o que las animaciones se pisen.
+    const isBusy =
+      this.currentPlayer.isAttacking || this.currentPlayer.isHurting;
+
+    if (!isBusy) {
+      // Solo permitimos movimiento y acciones si NO está ocupado
+      this.gridMovement?.handleInput(this.cursorKeys as any);
+      this.handlePlayerActions(); // Aquí es donde disparas el ataque
+    }
+
+    // --- 2. ANIMACIONES Y MÁSCARA ---
+    // Las animaciones deben seguir actualizándose (o el sistema de control de estas)
+    this.loadBumpkinAnimations();
+
+    if (this.darknessMask && this.visionCircle) {
       const x = this.currentPlayer.x;
       const y = this.currentPlayer.y;
-
-      // Borramos permanentemente esa zona
       this.darknessMask.erase(this.visionCircle, x, y);
     }
   }
@@ -460,6 +496,7 @@ export class DeepDungeonScene extends BaseScene {
     ) {
       animation = "idle";
     }
+
     return this.currentPlayer?.[animation]?.();
   }
   private handlePlayerActions() {
@@ -634,17 +671,22 @@ export class DeepDungeonScene extends BaseScene {
     if (this.isTransitioning) return;
     this.isTransitioning = true;
 
-    // 1. Detener el movimiento y limpiar el update
-    this.physics.pause();
+    // 1. Solo enviamos UN evento.
+    // Como tu máquina tiene "NEXT_MAP", usamos ese.
+    this.portalService?.send("NEXT_MAP");
+    this.portalService.send("OPEN_CARD_SELECTOR");
 
-    // 2. IMPORTANTE: Limpiar eventos globales que BaseScene o GridMovement usan
+    // 2. Pausamos físicas y eventos
+    this.physics.pause();
     this.events.off("PLAYER_MOVED");
     this.events.off("UPDATE_ENEMIES");
 
+    // 3. Transición visual
     this.cameras.main.fadeOut(500, 0, 0, 0);
     this.cameras.main.once("camerafadeoutcomplete", () => {
-      // 3. Usar start() asegura que la escena se resetee limpia
-      this.scene.start("deep_dungeon", { level: this.currentLevel + 1 });
+      // Importante: Sacamos el nivel del contexto de la máquina porque ya se sumó +1 allí
+      const nextLevel = this.portalService.state.context.stats.currentLevel;
+      this.scene.start("deep_dungeon", { level: nextLevel });
     });
   }
   private spawnCrystals(type: CrystalType, menaLevel: number, count: number) {
@@ -702,7 +744,10 @@ export class DeepDungeonScene extends BaseScene {
           this.currentPlayer,
           crystal,
           () => {
-            this.handleMining(crystal);
+            if (this.currentPlayer.isMining) {
+              // Solo restamos vida al cristal, NO enviamos eventos desde aquí
+              crystal.takeDamage();
+            }
           },
           undefined,
           this,
@@ -719,32 +764,46 @@ export class DeepDungeonScene extends BaseScene {
     }
   }
   private handleMining(crystal: CrystalContainer) {
-    const playerState = PlayerState.getInstance();
+    const stats = this.portalService?.state.context.stats;
+    const pickaxes = stats?.inventory.pickaxe || 0;
 
-    if (playerState.getPickaxes() > 0 && !crystal.isBeingMined) {
+    if (pickaxes > 0 && !crystal.isBeingMined) {
       crystal.isBeingMined = true;
 
-      // 1. Ejecutar animación de minado del personaje
-      // Asumiendo que tu BumpkinContainer tiene una animación llamada 'dig' o 'mine'
-      if (this.currentPlayer && this.currentPlayer.sprite) {
-        this.currentPlayer.mining(); // Cambia "dig" por el nombre real de tu anim
+      if (this.currentPlayer) {
+        this.currentPlayer.mining();
       }
 
-      // 2. Gastar el pico
-      playerState.spendPickaxe();
+      // 1. GASTAR PICO
+      this.portalService?.send("UPDATE_STATS", {
+        stats: {
+          inventory: {
+            ...stats?.inventory,
+            pickaxe: pickaxes - 1,
+          },
+        },
+      });
 
-      // 3. Pequeña pausa para que se vea la animación antes de que el cristal explote
+      // 2. ENVIAR A LA MÁQUINA
+      // CAMBIO CLAVE: Usamos 'menaLevel' que es como lo definiste en el Container
+      const crystalType = crystal.type;
+      const shapeId = crystal.menaLevel; // <--- ANTES DECÍA 'level', POR ESO DABA UNDEFINED
+
+      //console.log(`💎 Minando: ${crystalType} con nivel: ${shapeId}`);
+
+      this.portalService?.send("CRYSTAL_MINED", {
+        crystalType: String(crystalType),
+        shapeId: Number(shapeId), // Nos aseguramos de que sea un número
+      });
+
+      // 3. Animación de desaparición
       this.time.delayedCall(300, () => {
-        // Efecto visual al cristal
         this.tweens.add({
           targets: crystal,
-          displayHeight: 0,
-          displayWidth: 0,
+          scale: 0,
           alpha: 0,
           duration: 150,
           onComplete: () => {
-            // Volver a la animación de reposo (idle)
-
             this.crystals = this.crystals.filter((c) => c !== crystal);
             crystal.destroy();
             this.currentPlayer?.idle();

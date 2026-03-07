@@ -1,7 +1,8 @@
 import { BumpkinContainer } from "features/world/containers/BumpkinContainer";
 import { EnemyType, ENEMY_TYPES, EnemyStats } from "../lib/Enemies";
-import { PlayerState } from "../lib/playerState";
 import { CrystalContainer } from "./CrystalContainer";
+import { DROP_ITEMS_CONFIG, DUNGEON_POINTS } from "../DeepDungeonConstants";
+import { DeepDungeonScene } from "../DeepDungeonScene";
 
 interface Props {
   x: number;
@@ -23,8 +24,13 @@ interface SceneWithLayers extends Phaser.Scene {
   layers?: Record<string, Phaser.Tilemaps.TilemapLayer>;
 }
 
+interface IPlayerContainer extends BumpkinContainer {
+  playAnimationEnemies(state: string): void;
+}
+
 export class EnemyContainer extends Phaser.GameObjects.Container {
   private player?: BumpkinContainer;
+  public scene: DeepDungeonScene;
   public spriteBody: Phaser.GameObjects.Sprite;
   public enemyType: EnemyType;
   private isMoving = false;
@@ -38,11 +44,16 @@ export class EnemyContainer extends Phaser.GameObjects.Container {
   public targetGridY?: number;
   public nextGridX?: number;
   public nextGridY?: number;
+  private healthText: Phaser.GameObjects.Text;
+  private heartIcon: Phaser.GameObjects.Image;
+  private isInvulnerable: boolean = false;
+  private isDead = false;
+  private nameText: Phaser.GameObjects.Text;
 
   constructor({ x, y, scene, player, type }: Props) {
     super(scene, x, y);
     this.instanceId = Phaser.Utils.String.UUID(); // Genera algo como "abc-123"
-    this.scene = scene;
+    this.scene = scene as DeepDungeonScene;
     this.player = player;
     this.enemyType = type;
     // Inicializamos con la posición actual para no bloquear el 0,0
@@ -69,6 +80,58 @@ export class EnemyContainer extends Phaser.GameObjects.Container {
     this.scene.add.existing(this);
     // Asegúrate de que tenga físicas si usas overlaps
     this.scene.physics.add.existing(this);
+
+    this.nameText = this.scene.add
+      .text(0, -27, this.stats.name.toUpperCase(), {
+        fontSize: "4.5px",
+        fontFamily: "monospace", // O la fuente que uses en tu juego
+        color: "#ffffff",
+        stroke: "#000000",
+        strokeThickness: 2,
+        resolution: 10,
+        align: "center",
+      })
+      .setOrigin(0.5);
+
+    // Lo añadimos al contenedor para que se mueva con el enemigo
+
+    // 1. Crear el Texto de vida (A la IZQUIERDA: x = -6)
+    this.healthText = new Phaser.GameObjects.Text(
+      this.scene,
+      -3,
+      -20,
+      `${this.currentHp}`,
+      {
+        fontSize: "7px", // Un poco más grande para que se lea mejor
+        fontFamily: "monospace",
+        color: "#ffffff",
+        stroke: "#000000",
+        strokeThickness: 2,
+        resolution: 2, // Mejora la nitidez en pantallas de alta densidad
+      },
+    ).setOrigin(0.5);
+    this.healthText.setAlign("center");
+    this.scene.events.on("postupdate", () => {
+      if (this.healthText) {
+        this.healthText.x = Math.round(this.healthText.x);
+        this.healthText.y = Math.round(this.healthText.y);
+      }
+    });
+    // 2. Crear el Icono de corazón (A la DERECHA: x = 8)
+    this.heartIcon = new Phaser.GameObjects.Image(
+      this.scene,
+      5,
+      -20,
+      "heart_icon",
+    );
+    this.heartIcon.setDisplaySize(6, 6); // Un poco más grande para que coincida con el texto
+
+    // 3. Añadirlos al contenedor
+    this.add(this.nameText);
+    this.add([this.healthText, this.heartIcon]);
+    this.healthText.setDepth(1000);
+    this.heartIcon.setDepth(1000);
+    this.updateHealthBar();
   }
 
   public playAnimationEnemies(
@@ -239,105 +302,155 @@ export class EnemyContainer extends Phaser.GameObjects.Container {
     });
   }
   // El enemigo recibe daño
-  public takeDamage(amount: number) {
-    if (this.currentHp <= 0 || this.isMoving) return;
+  // 1. FUNCIÓN DE DAÑO UNIFICADA
+  public takeDamage(trapDamage?: number) {
+    // 1. SI ES INVULNERABLE O YA MURIÓ, SALIMOS
+    if (this.currentHp <= 0 || this.isInvulnerable) return;
 
-    // Bloqueamos movimiento para que la animación de 'hurt' se vea completa
-    //const wasMoving = this.isMoving;
-    this.isMoving = true;
+    let finalDamage: number = 0;
+    let isCritical = false;
 
-    // 1. Restar vida
-    this.currentHp -= amount;
+    // Accedemos a las stats reales desde la máquina
+    const stats = this.scene.portalService?.state.context.stats;
 
-    // 2. Feedback Visual: Tinte rojo momentáneo
-    this.spriteBody.setTint(0xff0000);
+    if (trapDamage !== undefined) {
+      finalDamage = trapDamage;
+    } else if (stats) {
+      const roll = Math.random();
+      isCritical = roll < (stats.criticalChance || 0.05);
+      const multiplier = isCritical ? 2 : 1;
 
-    // 3. Ejecutar Animación de Daño
-    this.playAnimationEnemies("hurt");
+      const pAttack = Number(stats.attack) || 1;
+      const eDefense = Number(this.stats.defense) || 0;
 
-    // 4. Manejar el final del golpe
-    // Usamos el evento 'animationcomplete' para que sea exacto al terminar los frames
-    this.spriteBody.once(
-      "animationcomplete-" + `${this.enemyType.toLowerCase()}_hurt_anim`,
-      () => {
-        this.spriteBody.clearTint();
+      finalDamage = pAttack * multiplier - eDefense;
+      if (finalDamage < 1 || isNaN(finalDamage)) finalDamage = 1;
+    }
 
-        if (this.currentHp <= 0) {
-          this.die();
-          this.player.hurt();
-        } else {
-          // Volver a estado normal
-          this.isMoving = false;
+    // 2. APLICAR DAÑO E INICIAR INVULNERABILIDAD
+    this.currentHp -= finalDamage;
+    this.isInvulnerable = true; // Activamos el escudo
+    this.updateHealthBar(isCritical);
+
+    //console.log(`[COMBATE] Daño: ${finalDamage} | HP: ${this.currentHp}`);
+
+    if (this.currentHp <= 0) {
+      this.currentHp = 0;
+      this.die();
+    } else {
+      // Feedback visual de golpe (se mantiene igual)
+      this.spriteBody.setTint(isCritical ? 0xffff00 : 0xff0000);
+      this.playAnimationEnemies("hurt");
+      this.scene.time.delayedCall(400, () => {
+        if (this.active) {
+          this.isInvulnerable = false;
+          this.spriteBody.clearTint();
           this.playAnimationEnemies("idle");
         }
-      },
-    );
-
-    // Seguridad: Si por algún motivo la animación no lanza el evento,
-    // forzamos la recuperación a los 500ms
-    this.scene.time.delayedCall(500, () => {
-      if (this.currentHp > 0 && this.isMoving) {
-        this.spriteBody.clearTint();
-        this.isMoving = false;
-        this.playAnimationEnemies("idle");
-      }
-    });
+      });
+    }
   }
   private die() {
-    this.isMoving = true;
-    this.currentHp = 0;
-    // Limpiamos su reserva para que la casilla quede libre inmediatamente
-    this.nextGridX = undefined;
-    this.nextGridY = undefined;
+    // 1. BLOQUEO DE SEGURIDAD (EL MÁS IMPORTANTE)
+    // Si ya está muerto, salimos inmediatamente para no repetir procesos
+    if (this.isDead) return;
+    this.isDead = true;
 
-    // 1. Quitar de la lista de enemigos de la escena INMEDIATAMENTE
-    const scene = this.scene as SceneWithEnemies;
-    if (scene.enemies) {
-      scene.enemies = scene.enemies.filter(
-        (e) => e.instanceId !== this.instanceId,
-      );
-    }
-
-    // 2. Desactivar colisiones
+    // 2. DESACTIVAR FÍSICAS E INTERACCIÓN INMEDIATAMENTE
+    this.disableInteractive();
     if (this.body) {
-      (this.body as Phaser.Physics.Arcade.Body).enable = false;
+      (this.body as Phaser.Physics.Arcade.Body).setEnable(false);
     }
 
-    // 3. Animación de muerte
+    // 3. NOTIFICAR A LA MÁQUINA (UNA SOLA VEZ)
+    // Usamos el nombre de los stats o el tipo, pasado a minúsculas
+    const enemyName = this.enemyType || this.stats?.name || "unknown";
+    const points = DUNGEON_POINTS.ENEMIES[enemyName] || 200;
+
+    //console.log("Murió el enemigo:", enemyName);
+
+    this.scene.portalService?.send("ENEMY_KILLED", {
+      enemyType: enemyName.toLowerCase(),
+    });
+
+    // 3. ENVIAR PUNTOS
+    this.scene.portalService?.send("ADD_POINTS", { amount: points });
+
+    // 4. LÓGICA DE DROP (Mantenemos tu lógica igual)
+    const stats = this.stats;
+    if (Math.random() <= (stats.dropChance || 0)) {
+      const lootTable = stats.lootTable;
+      if (lootTable && lootTable.length > 0) {
+        const totalWeight = lootTable.reduce(
+          (sum, item) => sum + item.weight,
+          0,
+        );
+        let random = Math.random() * totalWeight;
+        let selectedKey: DropKey | undefined;
+
+        for (const item of lootTable) {
+          if (random < item.weight) {
+            selectedKey = item.key;
+            break;
+          }
+          random -= item.weight;
+        }
+
+        if (selectedKey) {
+          this.spawnDrop(selectedKey);
+        }
+      }
+    }
+
+    // 5. LIMPIEZA VISUAL Y ANIMACIÓN
+    this.isMoving = true;
+    this.isInvulnerable = true;
+    this.currentHp = 0;
+
+    this.healthText?.destroy();
+    this.heartIcon?.destroy();
+    this.nameText?.destroy();
+
+    this.spriteBody.clearTint();
     this.playAnimationEnemies("dead");
 
-    // 4. Autodestrucción garantizada tras 1 segundo (por si falla la animación)
-    this.scene.time.delayedCall(800, () => {
+    // 6. LIMPIEZA DE LISTAS EN LA ESCENA
+    this.scene.time.delayedCall(100, () => {
+      if (this.scene.enemies) {
+        this.scene.enemies = this.scene.enemies.filter(
+          (e) => e.instanceId !== this.instanceId,
+        );
+      }
+    });
+
+    // 7. DESTRUCCIÓN FINAL
+    // (HE ELIMINADO EL SEGUNDO SEND QUE TENÍAS AQUÍ)
+    this.scene.time.delayedCall(1000, () => {
       this.destroy();
     });
   }
   // El enemigo te ataca
   public attackPlayer() {
-    // 1. Si ya está moviéndose/atacando o no hay jugador, salimos
     if (this.isMoving || !this.player || this.currentHp <= 0) return;
 
     this.isMoving = true;
     this.setDepth(150);
     this.playAnimationEnemies("attack");
 
-    // 2. Aplicar el daño a mitad de la animación (aprox 300ms)
-    // Esto es más fiable que esperar al final de la animación
     this.scene.time.delayedCall(400, () => {
       if (!this.active || this.currentHp <= 0) return;
 
-      // Aplicar daño al estado global
-      PlayerState.getInstance().consumeEnergy(this.stats.damage);
+      // --- CAMBIO AQUÍ: Calculamos el daño con defensa ---
+      const damageToApply = this.calculateDamageToPlayer(this.stats.damage);
+      // --- USAR PORTAL SERVICE PARA RECIBIR DAÑO ---
+      this.scene.portalService?.send("HIT_TRAP", { damage: damageToApply });
 
-      // Feedback visual en el jugador
       const player = this.player as unknown as IPlayerContainer;
       if (player && player.playAnimationEnemies) {
         player.playAnimationEnemies("hurt");
       }
-
-      //console.log(`[ATAQUE] ${this.enemyType} te ha quitado ${this.stats.damage} de energía`,);
     });
 
-    // 3. Resetear el estado de ataque tras 600ms para poder volver a atacar o moverse
     this.scene.time.delayedCall(900, () => {
       if (this.active && this.currentHp > 0) {
         this.setDepth(50);
@@ -346,42 +459,30 @@ export class EnemyContainer extends Phaser.GameObjects.Container {
       }
     });
   }
+
   public attackAoEPlayer() {
-    // 1. Si ya está moviéndose/atacando o no hay jugador, salimos
     if (this.isMoving || !this.player || this.currentHp <= 0) return;
 
     this.isMoving = true;
     this.setDepth(150);
     this.playAnimationEnemies("attackAoE");
-    if (this.enemyType === "FRANKENSTEIN") {
-      // Accedemos a la cámara a través de la propiedad scene
-      this.scene.cameras.main.flash(300, 219, 255, 255);
-      // Si también quieres el temblor:
-      this.scene.cameras.main.shake(50, 0.005);
-    } else if (this.enemyType === "DEVIL") {
-      // Un destello naranja suave (R: 255, G: 100, B: 0)
-      this.scene.cameras.main.flash(200, 255, 100, 0);
-      // Un temblor de baja intensidad pero más largo
-      this.scene.cameras.main.shake(400, 0.003);
-    }
-    // 2. Aplicar el daño a mitad de la animación (aprox 300ms)
-    // Esto es más fiable que esperar al final de la animación
+
     this.scene.time.delayedCall(400, () => {
       if (!this.active || this.currentHp <= 0) return;
 
-      // Aplicar daño al estado global
-      PlayerState.getInstance().consumeEnergy(this.stats.damageAoE);
+      // --- CAMBIO AQUÍ: Calculamos el daño con defensa para el ataque en área ---
+      const damageToApplyAoE = this.calculateDamageToPlayer(
+        this.stats.damageAoE,
+      );
+      // --- USAR PORTAL SERVICE PARA RECIBIR DAÑO ---
+      this.scene.portalService?.send("HIT_TRAP", { damage: damageToApplyAoE });
 
-      // Feedback visual en el jugador
       const player = this.player as unknown as IPlayerContainer;
       if (player && player.playAnimationEnemies) {
         player.playAnimationEnemies("hurt");
       }
-
-      //console.log(`[ATAQUE] ${this.enemyType} te ha quitado ${this.stats.damage} de energía`,);
     });
 
-    // 3. Resetear el estado de ataque tras 600ms para poder volver a atacar o moverse
     this.scene.time.delayedCall(900, () => {
       if (this.active && this.currentHp > 0) {
         this.setDepth(50);
@@ -407,5 +508,124 @@ export class EnemyContainer extends Phaser.GameObjects.Container {
   }
   public getCurrentHp() {
     return this.currentHp;
+  }
+
+  public updateHealthBar(isCrit: boolean = false) {
+    if (this.healthText && this.heartIcon) {
+      const current = Math.ceil(this.currentHp);
+      this.healthText.setText(`${current}`);
+
+      // Animación de "salto" del número
+      this.scene.tweens.add({
+        targets: [this.healthText, this.heartIcon],
+        scale: isCrit ? 1.8 : 1.2, // Más grande si es crítico
+        duration: 100,
+        delay: 350,
+        yoyo: true,
+        ease: "Back.easeOut",
+      });
+
+      // Lógica de colores por porcentaje (lo que ya tenías)
+      const percentage = current / this.stats.hp;
+      if (percentage <= 0.2) this.healthText.setColor("#ff0000");
+      else if (percentage <= 0.5) this.healthText.setColor("#ffff00");
+      else this.healthText.setColor("#00ff00");
+
+      // Visibilidad
+      const isAlive = current > 0;
+      this.healthText.setVisible(isAlive);
+      this.heartIcon.setVisible(isAlive);
+    }
+  }
+  private calculateDamageToPlayer(rawDamage: number): number {
+    const stats = this.scene.portalService?.state.context.stats;
+    const playerDefense = stats?.defense || 0;
+    const finalDamage = rawDamage - playerDefense;
+
+    //console.log(`--- 🛡️ JUGADOR RECIBE GOLPE ---`);
+    //console.log(`> Daño Base Enemigo: ${rawDamage}`);
+    //console.log(`> Tu Defensa: ${playerDefense}`);
+    //console.log(`> Energía restada: ${finalDamage}`);
+    return Math.max(1, finalDamage);
+  }
+  public takeTrapDamage(amount: number) {
+    // 1. Si ya está muerto o procesando otro daño, salimos
+    if (this.currentHp <= 0 || this.isMoving) return;
+
+    // 2. Bloqueamos movimiento para que la animación se vea
+    this.isMoving = true;
+
+    // 3. Aplicar el daño (las trampas suelen ser daño puro, ignoran defensa)
+    this.currentHp -= amount;
+
+    // 4. Actualizar visualmente la barra de vida
+    this.updateHealthBar(false); // No es crítico
+
+    // 5. Feedback Visual y Animación
+    this.spriteBody.setTint(0xff0000); // Rojo trampa
+    this.playAnimationEnemies("hurt");
+
+    // 6. Manejar el final del golpe (Tu lógica de eventos)
+    this.spriteBody.once(
+      "animationcomplete-" + `${this.enemyType.toLowerCase()}_hurt_anim`,
+      () => {
+        this.spriteBody.clearTint();
+
+        if (this.currentHp <= 0) {
+          // ESTO ES LO QUE FALTA: Ejecuta la limpieza y destrucción
+          this.die();
+        } else {
+          this.isMoving = false;
+          this.playAnimationEnemies("idle");
+        }
+      },
+    );
+
+    // Seguridad: Si la animación falla, recuperamos el estado a los 500ms
+    this.scene.time.delayedCall(500, () => {
+      if (this.currentHp > 0 && this.isMoving) {
+        this.spriteBody.clearTint();
+        this.isMoving = false;
+        this.playAnimationEnemies("idle");
+      }
+    });
+  }
+  private spawnDrop(selectedKey: DropKey) {
+    const config = DROP_ITEMS_CONFIG[selectedKey];
+    if (!config || !config.sprite) return;
+
+    const portalService = this.scene.portalService;
+    const drop = this.scene.physics.add.sprite(this.x, this.y, config.sprite);
+
+    if (drop.body) {
+      const body = drop.body as Phaser.Physics.Arcade.Body;
+      body.setAllowGravity(false);
+      body.setImmovable(true);
+      body.setSize(12, 12);
+    }
+
+    drop.setDepth(40);
+
+    //console.log(`📦 Drop generado: ${selectedKey}`);
+
+    this.scene.physics.add.overlap(
+      this.player!,
+      drop,
+      () => {
+        //console.log(`%c¡ITEM RECOGIDO! ID: ${selectedKey}`, "color: #bada55; font-weight: bold");
+
+        if (portalService) {
+          // --- EL CAMBIO CLAVE ---
+          // Enviamos el evento correcto a la máquina
+          portalService.send("ITEM_COLLECTED", {
+            itemKey: selectedKey,
+          });
+        }
+
+        drop.destroy();
+      },
+      undefined,
+      this,
+    );
   }
 }
