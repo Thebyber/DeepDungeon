@@ -10,17 +10,17 @@
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "module": "ESNext",
-    "moduleResolution": "Bundler",
+    "moduleResolution": "Node",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "features/": ["src/features/"],
-      "assets/": ["src/assets/"],
-      "lib/": ["src/lib/"],
-      "components/": ["src/components/"]
+      "features/*": ["src/features/*"],
+      "assets/*": ["src/assets/*"],
+      "lib/*": ["src/lib/*"],
+      "components/*": ["src/components/*"]
     }
   },
   "include": [
@@ -31,4 +31,3 @@
     "./src/types/page-lifecycle.d.ts"
   ]
 }
-
