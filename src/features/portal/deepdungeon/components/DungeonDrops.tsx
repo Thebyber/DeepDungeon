@@ -46,7 +46,8 @@ export const DungeonDrops: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {config.lootTable?.map((loot, i) => {
                 // Buscamos la info visual en DROP_ITEMS_CONFIG o ITEM_DETAILS
-                const itemInfo = DROP_ITEMS_CONFIG[loot.key as any];
+                const itemInfo =
+                  DROP_ITEMS_CONFIG[loot.key as keyof typeof DROP_ITEMS_CONFIG];
                 const displayName = itemInfo?.label || loot.key;
 
                 return (
@@ -57,7 +58,8 @@ export const DungeonDrops: React.FC = () => {
                     {/* Icono: Intenta usar ITEM_DETAILS, si no, usa el sprite del config */}
                     <img
                       src={
-                        ITEM_DETAILS[displayName]?.image ||
+                        ITEM_DETAILS[displayName as keyof typeof ITEM_DETAILS]
+                          ?.image ||
                         `world/DeepDungeonAssets/${loot.key.toLowerCase()}.png`
                       }
                       className="w-5 h-5 mr-2 object-contain"

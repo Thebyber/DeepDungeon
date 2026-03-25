@@ -5,6 +5,7 @@ import { MachineInterpreter } from "../lib/portalMachine";
 import { Label } from "components/ui/Label";
 import { SUNNYSIDE } from "assets/sunnyside";
 import { ITEM_DETAILS } from "features/game/types/images";
+import Decimal from "decimal.js-light";
 import pickaxeImg from "./assets/pickaxe.png";
 
 interface Props {
@@ -13,9 +14,13 @@ interface Props {
 
 export const DungeonInventory: React.FC<Props> = ({ portalService }) => {
   const [portalState] = useActor(portalService);
-  const inventory = portalState.context.stats.inventory || {};
+  // Forzamos a que el inventario se trate como un Record de números para poder usar llaves dinámicas
+  const inventory = (portalState.context.stats.inventory || {}) as Record<
+    string,
+    number
+  >;
 
-  // Filtros
+  // Filtros - Ahora 'key' es tratada como string de un Record, no hay error
   const tools = Object.keys(inventory).filter(
     (key) => key === "pickaxe" && inventory[key] > 0,
   );
@@ -24,7 +29,6 @@ export const DungeonInventory: React.FC<Props> = ({ portalService }) => {
     (key) => key.startsWith("mena_") && inventory[key] > 0,
   );
 
-  // Si está vacío, mostramos un mensaje amigable dentro del modal
   if (tools.length === 0 && crystals.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full opacity-70">
@@ -55,9 +59,9 @@ export const DungeonInventory: React.FC<Props> = ({ portalService }) => {
                 image={
                   name === "pickaxe"
                     ? pickaxeImg
-                    : ITEM_DETAILS[name as any]?.image
+                    : ITEM_DETAILS[name as keyof typeof ITEM_DETAILS]?.image
                 }
-                count={inventory[name]}
+                count={new Decimal(inventory[name])}
               />
             ))}
           </div>
@@ -80,8 +84,9 @@ export const DungeonInventory: React.FC<Props> = ({ portalService }) => {
             {crystals.map((name) => (
               <Box
                 key={name}
+                // Usamos el nombre del cristal para cargar la imagen local
                 image={`world/DeepDungeonAssets/${name}.png`}
-                count={inventory[name]}
+                count={new Decimal(inventory[name])}
               />
             ))}
           </div>

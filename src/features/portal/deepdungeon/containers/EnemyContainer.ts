@@ -4,6 +4,9 @@ import { CrystalContainer } from "./CrystalContainer";
 import { DROP_ITEMS_CONFIG, DUNGEON_POINTS } from "../DeepDungeonConstants";
 import { DeepDungeonScene } from "../DeepDungeonScene";
 
+type DropKey = string;
+type DropConfigKey = keyof typeof DROP_ITEMS_CONFIG;
+
 interface Props {
   x: number;
   y: number;
@@ -26,6 +29,7 @@ interface SceneWithLayers extends Phaser.Scene {
 
 interface IPlayerContainer extends BumpkinContainer {
   playAnimationEnemies(state: string): void;
+  hurt: () => void; // Añadimos la función hurt aquí
 }
 
 export class EnemyContainer extends Phaser.GameObjects.Container {
@@ -209,7 +213,7 @@ export class EnemyContainer extends Phaser.GameObjects.Container {
     //console.log(`Distancia a jugador: X:${diffX} Y:${diffY}`);
 
     // --- 2. EVITAR SOLAPAMIENTO (RESERVA) ---
-    const scene = this.scene as SceneWithEnemies;
+    const scene = this.scene as unknown as SceneWithEnemies;
     const enemies = scene.enemies || [];
 
     const isReserved = enemies.some((other) => {
@@ -475,8 +479,9 @@ export class EnemyContainer extends Phaser.GameObjects.Container {
       this.scene.portalService?.send("HIT_TRAP", { damage: damageToApplyAoE });
 
       // Solo llamar a hurt() si el jugador no está ya en ese estado
-      if (this.player && (this.player as any).hurt) {
-        (this.player as any).hurt();
+      const player = this.player as unknown as IPlayerContainer;
+      if (player && typeof player.hurt === "function") {
+        player.hurt();
       }
     });
 
@@ -589,7 +594,7 @@ export class EnemyContainer extends Phaser.GameObjects.Container {
     });
   }
   private spawnDrop(selectedKey: DropKey) {
-    const config = DROP_ITEMS_CONFIG[selectedKey];
+    const config = DROP_ITEMS_CONFIG[selectedKey as DropConfigKey];
     if (!config || !config.sprite) return;
 
     const portalService = this.scene.portalService;

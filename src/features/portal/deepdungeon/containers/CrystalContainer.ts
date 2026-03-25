@@ -1,5 +1,5 @@
 export class CrystalContainer extends Phaser.GameObjects.Container {
-  public body!: Phaser.Physics.Arcade.Body;
+  declare public body: Phaser.Physics.Arcade.Body;
   public isBeingMined: boolean = false;
   private health: number = 1;
   public type: string;

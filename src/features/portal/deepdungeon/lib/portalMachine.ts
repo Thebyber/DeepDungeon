@@ -241,7 +241,10 @@ export const portalMachine = createMachine<Context, DungeonEvent, PortalState>({
                 ...context.levelProgress,
                 crystals: {
                   ...context.levelProgress.crystals,
-                  [itemKey]: (context.levelProgress.crystals[itemKey] || 0) + 1,
+                  [itemKey]:
+                    ((context.levelProgress.crystals as Record<string, number>)[
+                      itemKey
+                    ] || 0) + 1,
                 },
               };
             },
@@ -253,7 +256,9 @@ export const portalMachine = createMachine<Context, DungeonEvent, PortalState>({
                 ...context.codex,
                 crystalsMined: {
                   ...currentCrystals,
-                  [itemKey]: (currentCrystals[itemKey] || 0) + 1,
+                  [itemKey]:
+                    ((currentCrystals as Record<string, number>)[itemKey] ||
+                      0) + 1,
                 },
               };
             },
@@ -269,7 +274,10 @@ export const portalMachine = createMachine<Context, DungeonEvent, PortalState>({
                 targetScore: context.stats.targetScore + pointsToAdd, // <--- SUMA AL SCORE
                 inventory: {
                   ...context.stats.inventory,
-                  [itemKey]: (context.stats.inventory[itemKey] || 0) + 1,
+                  [itemKey]:
+                    ((context.stats.inventory as Record<string, number>)[
+                      itemKey
+                    ] || 0) + 1,
                 },
               };
             },

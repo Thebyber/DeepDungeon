@@ -23,20 +23,53 @@ export const NPCS: NPCBumpkin[] = [
   },
 ];
 
+// Tipos para Cristales
+type CrystalType = "rosa" | "blanco" | "azul" | "mixto";
+interface LootConfig {
+  [key: string]: number;
+}
+
+// Interfaz extendida para el Jugador (Bumpkin)
+interface IDungeonPlayer extends Phaser.GameObjects.Container {
+  gridMovement?: GridMovement;
+  isDead: boolean;
+  isAttacking: boolean;
+  isHurting: boolean;
+  isMining: boolean;
+  isAxe: boolean;
+  isHammering: boolean;
+  isSwimming: boolean;
+  isDrilling: boolean;
+  isDigging: boolean;
+  isWalking: boolean;
+  // Métodos de animación
+  idle(): void;
+  attack(): void;
+  axe(): void;
+  mining(): void;
+  dig(): void;
+  hurt(): void;
+  dead(): void;
+  // Acceso a las animaciones dinámicas (línea 441)
+  [key: string]: any;
+}
+
 export class DeepDungeonScene extends BaseScene {
   sceneId: SceneId = "deep_dungeon";
   private gridMovement?: GridMovement;
-  private enemies: EnemyContainer[] = [];
+  public enemies: EnemyContainer[] = [];
   private playerKeys?: Record<string, Phaser.Input.Keyboard.Key>;
   private traps: TrapContainer[] = [];
   private currentLevel: number = 1;
   private isTransitioning: boolean = false;
-  private mapKey: string;
+  public mapKey!: string;
   private occupiedTiles: Set<string> = new Set();
   public crystals: CrystalContainer[] = [];
   private darknessMask?: Phaser.GameObjects.RenderTexture;
   private visionCircle?: Phaser.GameObjects.Graphics;
   private backgroundMusic!: Phaser.Sound.BaseSound;
+  groundLayer: any;
+  wallLayer: any;
 
   public get portalService() {
     const service = this.registry.get("portalService");
@@ -54,6 +87,7 @@ export class DeepDungeonScene extends BaseScene {
       map: {
         imageKey: "Tileset-deep-dungeon",
         defaultTilesetConfig: tilesetConfig,
+        json: undefined,
       },
     });
   }
@@ -374,13 +408,11 @@ export class DeepDungeonScene extends BaseScene {
     }
 
     // 4. Activar colisiones para el movimiento celda a celda
-    if (this.currentPlayer?.gridMovement) {
-      this.gridMovement = new GridMovement(
-        this,
-        this.currentPlayer,
-        16,
-        [this.wallLayer], // Asegúrate de que esto sea un Array de capas de colisión
-      );
+    const player = this.currentPlayer as any;
+    if (player?.gridMovement) {
+      this.gridMovement = new GridMovement(this, player, 16, {
+        walls: this.wallLayer as Phaser.Tilemaps.TilemapLayer,
+      });
     }
 
     const levelData = LEVEL_MAPS[this.currentLevel];
@@ -465,7 +497,7 @@ export class DeepDungeonScene extends BaseScene {
     //trapAtPos.activate(PlayerState.getInstance().getLevel());
     const currentLevel =
       this.portalService?.state.context.stats.currentLevel || 1;
-    trapAtPos.activate(currentLevel);
+    trapAtPos.activate();
     // 4. ¿EL JUGADOR PISÓ LA TRAMPA?
     if (this.currentPlayer) {
       const pTx = Math.floor(this.currentPlayer.x / 16);
@@ -719,7 +751,9 @@ export class DeepDungeonScene extends BaseScene {
     );
 
     if (validTiles.length > 0) {
-      const tile = Phaser.Utils.Array.GetRandom(validTiles);
+      const tile = Phaser.Utils.Array.GetRandom(
+        validTiles,
+      ) as Phaser.Tilemaps.Tile;
 
       // 1. Centramos la escalera con el ajuste de +4 que pediste
       const centerX = tile.getCenterX();
@@ -833,7 +867,9 @@ export class DeepDungeonScene extends BaseScene {
     let spawned = 0;
 
     while (spawned < count && validTiles.length > 0) {
-      const tile = Phaser.Utils.Array.GetRandom(validTiles);
+      const tile = Phaser.Utils.Array.GetRandom(
+        validTiles,
+      ) as Phaser.Tilemaps.Tile;
       const tileKey = `${tile.x},${tile.y}`;
 
       // Evitar solapar con otros cristales o la escalera
@@ -843,12 +879,13 @@ export class DeepDungeonScene extends BaseScene {
 
         const crystal = new CrystalContainer(this, cx, cy, type, menaLevel);
         this.crystals.push(crystal);
+        const player = this.currentPlayer as any;
         // 1. Colisión con el Jugador (Picar)
         this.physics.add.collider(
-          this.currentPlayer,
+          player,
           crystal,
           () => {
-            if (this.currentPlayer.isMining) {
+            if (player.isMining) {
               // Solo restamos vida al cristal, NO enviamos eventos desde aquí
               crystal.takeDamage();
             }
@@ -867,7 +904,7 @@ export class DeepDungeonScene extends BaseScene {
       }
     }
   }
-  private handleMining(crystal: CrystalContainer) {
+  public handleMining(crystal: CrystalContainer) {
     const stats = this.portalService?.state.context.stats;
     const pickaxes = stats?.inventory.pickaxe || 0;
 
@@ -946,7 +983,7 @@ export class DeepDungeonScene extends BaseScene {
 
     // 6. Generar Cristales según la constante
     config.crystals.forEach((c) => {
-      this.spawnCrystals(c.type, c.level, c.count);
+      this.spawnCrystals(c.type as CrystalType, c.level, c.count);
     });
   }
   private createFog() {

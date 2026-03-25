@@ -9,7 +9,7 @@ export interface EnemyStats {
   sprite: string;
   isAggressive: boolean;
   isRanged: boolean;
-  damageAoE?: number; // Solo para enemigos con ataque de área
+  damageAoE: number; // Solo para enemigos con ataque de área
   criticalChance?: number;
   dropChance: number; // Probabilidad de que suelte ALGO (ej: 0.5 = 50%)
   lootTable: { key: DropKey; weight: number }[]; // Lista de posibles objetos
@@ -25,6 +25,7 @@ export const ENEMY_TYPES: Record<EnemyType, EnemyStats> = {
     defense: 2,
     criticalChance: 0.05,
     trapDamage: 1,
+    damageAoE: 0,
     sprite: "skeleton",
     isAggressive: false,
     isRanged: false,
@@ -43,6 +44,7 @@ export const ENEMY_TYPES: Record<EnemyType, EnemyStats> = {
     defense: 6,
     criticalChance: 0.1,
     trapDamage: 0,
+    damageAoE: 0,
     sprite: "knight",
     isAggressive: false,
     isRanged: false,

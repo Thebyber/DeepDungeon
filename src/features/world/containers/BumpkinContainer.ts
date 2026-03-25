@@ -1623,7 +1623,7 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
           this.sprite,
           this.deathAnimationKey as string,
           () => {
-            this.portalService?.send("GAME_OVER");
+            //this.portalService?.send("GAME_OVER");
           },
         );
       } catch (e) {
@@ -1632,7 +1632,7 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
           "Bumpkin Container: Error playing carry idle animation: ",
           e,
         );
-        this.portalService?.send("GAME_OVER");
+        //this.portalService?.send("GAME_OVER");
       }
     }
   }

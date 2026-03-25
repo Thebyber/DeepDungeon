@@ -111,12 +111,14 @@ export const CardSelectionHUD: React.FC = () => {
               />
 
               <div className="text-[5px] font-pixel text-brown-800 bg-black/5 w-full py-1 rounded mt-auto">
-                {Object.entries(card.bonus).map(([key, val]) => (
-                  <p key={key} className="leading-tight">
-                    {`+`}
-                    {val} {key}
-                  </p>
-                ))}
+                {Object.entries(card.bonus as Record<string, number>).map(
+                  ([key, val]) => (
+                    <p key={key} className="leading-tight">
+                      {`+`}
+                      {val} {key}
+                    </p>
+                  ),
+                )}
               </div>
             </OuterPanel>
           ))}

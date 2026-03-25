@@ -238,39 +238,65 @@ export const LEVEL_DESIGNS: Record<number, LevelDesign> = {
 
 // También puedes mover otras constantes que tengas por ahí
 export const TILE_SIZE = 16;
+export interface PlayerStats {
+  attack: number;
+  defense: number;
+  energy: number;
+  maxEnergy: number;
+  criticalChance: number;
+  inventory: {
+    pickaxe: number;
+    [key: string]: number; // Permite otros items como los cristales
+  };
+}
+export interface DropItem {
+  sprite: string;
+  label: string;
+  action: (stats: PlayerStats) => void;
+}
 
-export const DROP_ITEMS_CONFIG = {
+export const DROP_ITEMS_CONFIG: Record<string, DropItem> = {
   ATTACK: {
     sprite: "potion_attack",
     label: "+1 Ataque",
-    action: (stats: any) => (stats.attack += 1),
+    action: (stats) => {
+      stats.attack += 1;
+    },
   },
   DEFENSE: {
     sprite: "shield_up",
     label: "+1 Defensa",
-    action: (stats: any) => (stats.defense += 1),
+    action: (stats) => {
+      stats.defense += 1;
+    },
   },
   ENERGY_10: {
     sprite: "energy_big",
     label: "+10 Energía",
-    action: (stats: any) =>
-      (stats.energy = Math.min(stats.energy + 10, stats.maxEnergy)),
+    action: (stats) => {
+      stats.energy = Math.min(stats.energy + 10, stats.maxEnergy);
+    },
   },
   ENERGY_5: {
     sprite: "energy_small",
     label: "+5 Energía",
-    action: (stats: any) =>
-      (stats.energy = Math.min(stats.energy + 5, stats.maxEnergy)),
+    action: (stats) => {
+      stats.energy = Math.min(stats.energy + 5, stats.maxEnergy);
+    },
   },
   CRIT: {
     sprite: "crit_star",
     label: "+5% Crítico",
-    action: (stats: any) => (stats.criticalChance += 0.05),
+    action: (stats) => {
+      stats.criticalChance += 0.05;
+    },
   },
   PICKAXE: {
     sprite: "pickaxe",
     label: "+1 Pico",
-    action: (stats: any) => (stats.inventory.pickaxe += 1),
+    action: (stats) => {
+      stats.inventory.pickaxe += 1;
+    },
   },
 };
 
