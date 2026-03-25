@@ -25,7 +25,7 @@ export const PortalProvider: React.FC<React.PropsWithChildren> = ({
       // Handle the received message
       if (event.data.event === "purchased") {
         // Put in your handlers here
-        portalService.send("PURCHASED");
+        portalService.send("PURCHASED" as any);
       }
     };
 

@@ -1,4 +1,4 @@
-import mapJson from "assets/map/plaza.json";
+//import mapJson from "assets/map/plaza.json";
 import mapJson2 from "assets/map/DeepDungeonMap1.json";
 import { SceneId } from "features/world/mmoMachine";
 import { BaseScene, NPCBumpkin } from "features/world/scenes/BaseScene";

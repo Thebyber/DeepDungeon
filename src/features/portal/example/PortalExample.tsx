@@ -10,7 +10,6 @@ import { Label } from "components/ui/Label";
 
 import { useAppTranslation } from "lib/i18n/useAppTranslations";
 import { PortalExampleHUD } from "./components/PortalExampleHUD";
-import { PortalExamplePhaser } from "./PortalExamplePhaser";
 
 import { authorisePortal } from "../lib/portalUtil";
 import { PortalMachineState } from "./lib/portalMachine";
@@ -95,7 +94,6 @@ export const PortalExample: React.FC = () => {
       {gameState && (
         <>
           <PortalExampleHUD />
-          <PortalExamplePhaser />
         </>
       )}
     </div>
