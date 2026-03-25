@@ -46,54 +46,41 @@ export interface LevelDesign {
   traps: number;
   crystals: CrystalConfig[];
   pickaxes: number;
-  x: number; // Coordenada X de inicio del jugador
-  y: number; // Coordenada Y de inicio del jugador
 }
 export interface LevelConfig {
   playerStart: { x: number; y: number };
-  npcs: NPCBumpkin[];
 }
 
 export const LEVEL_MAPS: Record<number, LevelConfig> = {
   1: {
     playerStart: { x: 160, y: 128 },
-    npcs: [{ x: 380, y: 400, npc: "portaller" }],
   },
   2: {
-    playerStart: { x: 32, y: 64 }, // Coordenadas distintas para el nivel 2
-    npcs: [{ x: 200, y: 200, npc: "portaller" }],
+    playerStart: { x: 32, y: 64 },
   },
   3: {
     playerStart: { x: 240, y: 64 },
-    npcs: [{ x: 380, y: 400, npc: "portaller" }],
   },
   4: {
     playerStart: { x: 288, y: 48 },
-    npcs: [{ x: 380, y: 400, npc: "portaller" }],
   },
   5: {
     playerStart: { x: 64, y: 64 },
-    npcs: [{ x: 380, y: 400, npc: "portaller" }],
   },
   6: {
     playerStart: { x: 48, y: 48 },
-    npcs: [{ x: 380, y: 400, npc: "portaller" }],
   },
   7: {
     playerStart: { x: 192, y: 256 },
-    npcs: [{ x: 380, y: 400, npc: "portaller" }],
   },
   8: {
     playerStart: { x: 64, y: 64 },
-    npcs: [{ x: 380, y: 400, npc: "portaller" }],
   },
   9: {
     playerStart: { x: 64, y: 256 },
-    npcs: [{ x: 380, y: 400, npc: "portaller" }],
   },
   10: {
     playerStart: { x: 64, y: 272 },
-    npcs: [{ x: 380, y: 400, npc: "portaller" }],
   },
 };
 export const LEVEL_SETTINGS: Record<
@@ -325,7 +312,7 @@ export interface Card {
   type: "Común" | "Rara" | "Épica" | "Legendaria";
   name: string;
   color: string;
-  bonus: any;
+  bonus: unknown;
   icon: "attack" | "lightning" | "pickaxe" | "crit" | "defense";
 }
 
