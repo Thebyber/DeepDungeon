@@ -10,24 +10,27 @@
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "module": "ESNext",
-    "moduleResolution": "Node",
+    "moduleResolution": "Bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "baseUrl": ".",
+    
+    /* Eliminamos baseUrl para que no llore y usamos ignoreDeprecations por si acaso */
+    "ignoreDeprecations": "5.0",
+    
     "paths": {
-      "features/*": ["src/features/*"],
-      "assets/*": ["src/assets/*"],
-      "lib/*": ["src/lib/*"],
-      "components/*": ["src/components/*"]
+      "features/*": ["./src/features/*"],
+      "assets/*": ["./src/assets/*"],
+      "lib/*": ["./src/lib/*"],
+      "components/*": ["./src/components/*"]
     }
   },
   "include": [
-    "./src",
-    "./metadata",
-    "./node_modules/vite-plugin-pwa/react.d.ts",
-    "./node_modules/@khmyznikov/pwa-install/index.d.ts",
-    "./src/types/page-lifecycle.d.ts"
+    "src",
+    "metadata",
+    "node_modules/vite-plugin-pwa/react.d.ts",
+    "node_modules/@khmyznikov/pwa-install/index.d.ts",
+    "src/types/page-lifecycle.d.ts"
   ]
 }
