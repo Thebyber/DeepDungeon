@@ -1,12 +1,14 @@
-name: DeepDungeon Portal Deploy
+name: Portal deploy
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
   deploy:
     concurrency: portal-deploy
-    environment: "develop"
+    environment: develop
     runs-on: ubuntu-latest
     steps:
       - name: Get current date
@@ -19,6 +21,11 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
 
       - name: Install Dependencies
         run: yarn install
@@ -36,8 +43,6 @@ jobs:
           VITE_API_URL: "https://api-dev.sunflower-land.com"
           VITE_PORTAL_GAME_URL: "https://sunflower-land.com/testnet/"
           VITE_ANIMATION_URL: "https://animations-dev.sunflower-land.com"
-          VITE_PRIVATE_PORTAL_URL: ${{ secrets.PROTECTED_PORTAL_URL }}
-          VITE_PORTAL_DONATION_ADDRESS: ${{ secrets.PORTAL_DONATION_ADDRESS }}
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1.5.9
