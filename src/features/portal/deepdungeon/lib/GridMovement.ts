@@ -44,7 +44,13 @@ export class GridMovement {
   }
 
   public handleInput(cursors: Record<string, { isDown: boolean } | undefined>) {
-    if (this.isMoving || !this.currentPlayer || !cursors) return;
+    if (
+      this.isMoving ||
+      !this.currentPlayer ||
+      this.currentPlayer.isDead ||
+      !cursors
+    )
+      return;
 
     let dx = 0;
     let dy = 0;
@@ -65,7 +71,13 @@ export class GridMovement {
     const service = scene.portalService;
     const stats = service?.state.context.stats;
 
-    if (!stats || stats.energy <= 0) return;
+    if (!stats || stats.energy <= 0) {
+      if (!this.currentPlayer.isDead) {
+        // Esto asegura que si intentas moverte sin energía, mueras visualmente
+        (this.scene as any).handlePlayerDeath();
+      }
+      return;
+    }
 
     // 1. Obtener posición base (sin offsets)
     const currentGridX = Math.floor(this.currentPlayer.x / 16) * 16;
@@ -92,6 +104,12 @@ export class GridMovement {
     // Usamos +8 y +8 para mirar el centro del tile
     const isWater =
       waterLayer?.getTileAtWorldXY(nextGridX + 8, nextGridY + 8) !== null;
+    if (isWater) {
+      this.currentPlayer.isSwimming = true;
+      // Activa animación de nadar
+    } else {
+      this.currentPlayer.isSwimming = false;
+    }
 
     // 2. COMPROBAR CRISTALES (Bloqueo y Minado)
 
@@ -131,16 +149,17 @@ export class GridMovement {
       }
       player.attack();
 
-      // 2. Feedback de color (opcional, ayuda a saber si el código llega aquí)
-      /*if (player.sprite) {
-        player.sprite.setTint(0x0000ff);
-        this.scene.time.delayedCall(200, () => player.sprite?.clearTint());
-      }*/
+      // --- NUEVO CÁLCULO DE DAÑO ---
+      // Obtenemos las stats del enemigo (que deberían incluir 'defense')
+      const enemyStats = (targetEnemy as any).stats || { defense: 0 };
 
-      // 3. Daño al enemigo
-      targetEnemy.takeDamage(stats.attack);
+      // Fórmula simple: Daño = Ataque - Defensa (mínimo 1 de daño para que no sea 0)
+      const finalDamage = Math.max(1, stats.attack - (enemyStats.defense || 0));
+
+      // Aplicamos el daño calculado
+      targetEnemy.takeDamage(finalDamage);
       // 4. Contraataque enemigo con ligero delay
-      this.scene.time.delayedCall(500, () => {
+      this.scene.time.delayedCall(800, () => {
         // Comprobamos active (Phaser) y currentHp (tu lógica)
         if (
           targetEnemy &&

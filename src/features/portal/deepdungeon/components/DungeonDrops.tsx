@@ -58,7 +58,7 @@ export const DungeonDrops: React.FC = () => {
                     <img
                       src={
                         ITEM_DETAILS[displayName]?.image ||
-                        `assets/icons/${loot.key.toLowerCase()}.png`
+                        `world/DeepDungeonAssets/${loot.key.toLowerCase()}.png`
                       }
                       className="w-5 h-5 mr-2 object-contain"
                       alt={displayName}

@@ -18,7 +18,7 @@ export const EnemiesPage: React.FC = () => {
           return (
             <div key={enemy.name} className="flex flex-col items-center">
               <SimpleBox
-                image={`assets/enemies/${enemy.sprite}.png`}
+                image={`world/DeepDungeonAssets/${enemy.sprite}.png`}
                 silhouette={count === 0}
                 inventoryCount={count > 0 ? count : undefined}
               />

@@ -67,7 +67,7 @@ const DungeonItemSlot: React.FC<{
           <div className="flex items-center justify-center gap-0.5">
             {/* Usamos la ruta directa que definiste en Phaser */}
 
-            <span className="text-[6px] font-pixel text-red-700">{hp}</span>
+            <span className="text-[6px] font-pixel text-red-700">{atk}</span>
             <img
               src="world/DeepDungeonAssets/sword.png"
               alt="Sword"

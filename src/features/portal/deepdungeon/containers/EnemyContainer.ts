@@ -127,11 +127,19 @@ export class EnemyContainer extends Phaser.GameObjects.Container {
     this.heartIcon.setDisplaySize(6, 6); // Un poco más grande para que coincida con el texto
 
     // 3. Añadirlos al contenedor
-    this.add(this.nameText);
+    // this.add(this.nameText);
     this.add([this.healthText, this.heartIcon]);
     this.healthText.setDepth(1000);
     this.heartIcon.setDepth(1000);
     this.updateHealthBar();
+  }
+
+  private addSound(
+    key: string,
+    loop = false,
+    volume = 0.2,
+  ): Phaser.Sound.BaseSound {
+    return this.scene.sound.add(key, { loop, volume });
   }
 
   public playAnimationEnemies(
@@ -139,34 +147,18 @@ export class EnemyContainer extends Phaser.GameObjects.Container {
   ) {
     const name = this.enemyType.toLowerCase(); // "skeleton"
     const key = `${name}_${state}_anim`;
-    let end_sprite = 6;
-    let frame = 10;
-    if (state === "idle") end_sprite = 5;
-    else if (state === "attack" || state === "attackAoE" || state === "hurt")
-      end_sprite = 10;
-    if (
-      key === "frankenstein_attack_anim" ||
-      key === "devil_attack_anim" ||
-      key === "knight_dead_anim"
-    ) {
-      frame = 12;
-      end_sprite = 10;
-    } else if (state === "walk") end_sprite = 7;
-    else if (state === "dead") end_sprite = 9;
-    if (
-      key === "knight_dead_anim" ||
-      key === "frankenstein_dead_anim" ||
-      key === "devil_dead_anim"
-    )
-      end_sprite = 12; // El knight tiene más frames de ataque
-    frame = 12;
+    let end_sprite = 7;
+    const frame = 10;
+    if (state === "idle") end_sprite = 8;
+    else if (state === "attack" || state === "attackAoE") end_sprite = 9;
+    else if (state === "dead") end_sprite = 12;
 
     if (!this.scene.anims.exists(key)) {
       this.scene.anims.create({
         key: key,
         frames: this.scene.anims.generateFrameNumbers(`${name}_${state}`, {
           start: 0,
-          end: end_sprite, // Para los strip7.png
+          end: end_sprite,
         }),
         frameRate: frame, // Un poco más rápido para que el combate sea ágil
         repeat: state === "idle" || state === "walk" ? -1 : 0,
@@ -197,12 +189,10 @@ export class EnemyContainer extends Phaser.GameObjects.Container {
       if (isNeighbor2 && this.stats.isAggressive && this.stats.isRanged) {
         // Solo llamamos a la función, ella se encarga del resto
         this.attackAoEPlayer();
-        this.player.hurt();
         return;
       } else if (isNeighbor && this.stats.isAggressive) {
         // Solo llamamos a la función, ella se encarga del resto
         this.attackAoEPlayer();
-        this.player.hurt();
         return;
       }
     }
@@ -341,7 +331,7 @@ export class EnemyContainer extends Phaser.GameObjects.Container {
       // Feedback visual de golpe (se mantiene igual)
       this.spriteBody.setTint(isCritical ? 0xffff00 : 0xff0000);
       this.playAnimationEnemies("hurt");
-      this.scene.time.delayedCall(400, () => {
+      this.scene.time.delayedCall(500, () => {
         if (this.active) {
           this.isInvulnerable = false;
           this.spriteBody.clearTint();
@@ -425,8 +415,9 @@ export class EnemyContainer extends Phaser.GameObjects.Container {
 
     // 7. DESTRUCCIÓN FINAL
     // (HE ELIMINADO EL SEGUNDO SEND QUE TENÍAS AQUÍ)
-    this.scene.time.delayedCall(1000, () => {
+    this.scene.time.delayedCall(1310, () => {
       this.destroy();
+      this.player?.idle();
     });
   }
   // El enemigo te ataca
@@ -436,8 +427,10 @@ export class EnemyContainer extends Phaser.GameObjects.Container {
     this.isMoving = true;
     this.setDepth(150);
     this.playAnimationEnemies("attack");
-
-    this.scene.time.delayedCall(400, () => {
+    const name = this.enemyType.toLowerCase(); // "skeleton"
+    const EnemyAttackSound = `${name}_attack`;
+    this.addSound(EnemyAttackSound).play();
+    this.scene.time.delayedCall(1000, () => {
       if (!this.active || this.currentHp <= 0) return;
 
       // --- CAMBIO AQUÍ: Calculamos el daño con defensa ---
@@ -451,7 +444,7 @@ export class EnemyContainer extends Phaser.GameObjects.Container {
       }
     });
 
-    this.scene.time.delayedCall(900, () => {
+    this.scene.time.delayedCall(1000, () => {
       if (this.active && this.currentHp > 0) {
         this.setDepth(50);
         this.isMoving = false;
@@ -461,32 +454,38 @@ export class EnemyContainer extends Phaser.GameObjects.Container {
   }
 
   public attackAoEPlayer() {
+    // 1. Añadimos un chequeo de HP y estado para evitar re-entrada
     if (this.isMoving || !this.player || this.currentHp <= 0) return;
 
     this.isMoving = true;
     this.setDepth(150);
     this.playAnimationEnemies("attackAoE");
 
-    this.scene.time.delayedCall(400, () => {
+    const name = this.enemyType.toLowerCase();
+    const EnemyAttackSoundAoE = `${name}_attackAoE`;
+    this.addSound(EnemyAttackSoundAoE).play();
+
+    // 2. EL DAÑO: Se ejecuta a los 1000ms (impacto visual)
+    this.scene.time.delayedCall(50, () => {
       if (!this.active || this.currentHp <= 0) return;
 
-      // --- CAMBIO AQUÍ: Calculamos el daño con defensa para el ataque en área ---
       const damageToApplyAoE = this.calculateDamageToPlayer(
         this.stats.damageAoE,
       );
-      // --- USAR PORTAL SERVICE PARA RECIBIR DAÑO ---
       this.scene.portalService?.send("HIT_TRAP", { damage: damageToApplyAoE });
 
-      const player = this.player as unknown as IPlayerContainer;
-      if (player && player.playAnimationEnemies) {
-        player.playAnimationEnemies("hurt");
+      // Solo llamar a hurt() si el jugador no está ya en ese estado
+      if (this.player && (this.player as any).hurt) {
+        (this.player as any).hurt();
       }
     });
 
-    this.scene.time.delayedCall(900, () => {
+    // 3. LA RECUPERACIÓN: Le damos un poco más de tiempo (1200ms)
+    // para que la animación termine y el jugador pueda reaccionar
+    this.scene.time.delayedCall(1100, () => {
       if (this.active && this.currentHp > 0) {
         this.setDepth(50);
-        this.isMoving = false;
+        this.isMoving = false; // Aquí permitimos que el enemigo vuelva a pensar
         this.playAnimationEnemies("idle");
       }
     });
@@ -562,7 +561,6 @@ export class EnemyContainer extends Phaser.GameObjects.Container {
     this.updateHealthBar(false); // No es crítico
 
     // 5. Feedback Visual y Animación
-    this.spriteBody.setTint(0xff0000); // Rojo trampa
     this.playAnimationEnemies("hurt");
 
     // 6. Manejar el final del golpe (Tu lógica de eventos)

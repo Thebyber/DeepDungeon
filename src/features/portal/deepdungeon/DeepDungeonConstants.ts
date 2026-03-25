@@ -64,14 +64,37 @@ export const LEVEL_MAPS: Record<number, LevelConfig> = {
     npcs: [{ x: 200, y: 200, npc: "portaller" }],
   },
   3: {
-    playerStart: { x: 80, y: 64 },
+    playerStart: { x: 240, y: 64 },
     npcs: [{ x: 380, y: 400, npc: "portaller" }],
   },
   4: {
+    playerStart: { x: 288, y: 48 },
+    npcs: [{ x: 380, y: 400, npc: "portaller" }],
+  },
+  5: {
     playerStart: { x: 64, y: 64 },
     npcs: [{ x: 380, y: 400, npc: "portaller" }],
   },
-  // Añ
+  6: {
+    playerStart: { x: 48, y: 48 },
+    npcs: [{ x: 380, y: 400, npc: "portaller" }],
+  },
+  7: {
+    playerStart: { x: 192, y: 256 },
+    npcs: [{ x: 380, y: 400, npc: "portaller" }],
+  },
+  8: {
+    playerStart: { x: 64, y: 64 },
+    npcs: [{ x: 380, y: 400, npc: "portaller" }],
+  },
+  9: {
+    playerStart: { x: 64, y: 256 },
+    npcs: [{ x: 380, y: 400, npc: "portaller" }],
+  },
+  10: {
+    playerStart: { x: 64, y: 272 },
+    npcs: [{ x: 380, y: 400, npc: "portaller" }],
+  },
 };
 export const LEVEL_SETTINGS: Record<
   number,
@@ -80,24 +103,35 @@ export const LEVEL_SETTINGS: Record<
   1: { fogColor: 0x191a27, fogAlpha: 0.7 },
   2: { fogColor: 0x191a27, fogAlpha: 0.8 },
   3: { fogColor: 0x191a27, fogAlpha: 0.9 },
-  4: { fogColor: 0x271714, fogAlpha: 1.0 },
+  4: { fogColor: 0x191a27, fogAlpha: 1.0 },
+  5: { fogColor: 0x191a27, fogAlpha: 1.0 },
+  6: { fogColor: 0x271714, fogAlpha: 1.0 },
+  7: { fogColor: 0x271714, fogAlpha: 1.0 },
+  8: { fogColor: 0x271714, fogAlpha: 1.0 },
+  9: { fogColor: 0x271714, fogAlpha: 1.0 },
+  10: { fogColor: 0x271714, fogAlpha: 1.0 },
 };
 export const LEVEL_DESIGNS: Record<number, LevelDesign> = {
   1: {
-    enemies: [{ type: "FRANKENSTEIN", count: 5 }],
+    enemies: [
+      { type: "FRANKENSTEIN", count: 0 },
+      { type: "KNIGHT", count: 0 },
+      { type: "SKELETON", count: 10 },
+      { type: "DEVIL", count: 0 },
+    ],
     traps: 5,
     crystals: [
       { type: "rosa", level: 4, count: 5 },
       { type: "blanco", level: 1, count: 3 },
     ],
     pickaxes: 3,
-    x: 380,
-    y: 400,
   },
   2: {
     enemies: [
-      { type: "FRANKENSTEIN", count: 4 },
-      { type: "KNIGHT", count: 2 },
+      { type: "FRANKENSTEIN", count: 0 },
+      { type: "KNIGHT", count: 3 },
+      { type: "SKELETON", count: 8 },
+      { type: "DEVIL", count: 0 },
     ],
     traps: 10,
     crystals: [
@@ -108,21 +142,111 @@ export const LEVEL_DESIGNS: Record<number, LevelDesign> = {
     pickaxes: 2,
   },
   3: {
-    enemies: [{ type: "KNIGHT", count: 5 }],
+    enemies: [
+      { type: "FRANKENSTEIN", count: 2 },
+      { type: "KNIGHT", count: 3 },
+      { type: "SKELETON", count: 10 },
+      { type: "DEVIL", count: 0 },
+    ],
     traps: 15,
     crystals: [{ type: "mixto", level: 3, count: 8 }],
     pickaxes: 6,
   },
   4: {
     enemies: [
-      { type: "KNIGHT", count: 5 },
       { type: "FRANKENSTEIN", count: 4 },
+      { type: "KNIGHT", count: 4 },
+      { type: "SKELETON", count: 6 },
+      { type: "DEVIL", count: 2 },
     ],
-    traps: 15,
+    traps: 10,
     crystals: [{ type: "mixto", level: 3, count: 8 }],
     pickaxes: 6,
   },
-  // Puedes seguir añadiendo niveles aquí...
+  5: {
+    enemies: [
+      { type: "FRANKENSTEIN", count: 0 },
+      { type: "KNIGHT", count: 0 },
+      { type: "SKELETON", count: 10 },
+      { type: "DEVIL", count: 0 },
+    ],
+    traps: 5,
+    crystals: [
+      { type: "rosa", level: 4, count: 5 },
+      { type: "blanco", level: 1, count: 3 },
+    ],
+    pickaxes: 3,
+  },
+  6: {
+    enemies: [
+      { type: "FRANKENSTEIN", count: 0 },
+      { type: "KNIGHT", count: 0 },
+      { type: "SKELETON", count: 10 },
+      { type: "DEVIL", count: 0 },
+    ],
+    traps: 5,
+    crystals: [
+      { type: "rosa", level: 4, count: 5 },
+      { type: "blanco", level: 1, count: 3 },
+    ],
+    pickaxes: 3,
+  },
+  7: {
+    enemies: [
+      { type: "FRANKENSTEIN", count: 0 },
+      { type: "KNIGHT", count: 0 },
+      { type: "SKELETON", count: 10 },
+      { type: "DEVIL", count: 0 },
+    ],
+    traps: 5,
+    crystals: [
+      { type: "rosa", level: 4, count: 5 },
+      { type: "blanco", level: 1, count: 3 },
+    ],
+    pickaxes: 3,
+  },
+  8: {
+    enemies: [
+      { type: "FRANKENSTEIN", count: 0 },
+      { type: "KNIGHT", count: 0 },
+      { type: "SKELETON", count: 10 },
+      { type: "DEVIL", count: 0 },
+    ],
+    traps: 5,
+    crystals: [
+      { type: "rosa", level: 4, count: 5 },
+      { type: "blanco", level: 1, count: 3 },
+    ],
+    pickaxes: 3,
+  },
+  9: {
+    enemies: [
+      { type: "FRANKENSTEIN", count: 0 },
+      { type: "KNIGHT", count: 0 },
+      { type: "SKELETON", count: 10 },
+      { type: "DEVIL", count: 0 },
+    ],
+    traps: 5,
+    crystals: [
+      { type: "rosa", level: 4, count: 5 },
+      { type: "blanco", level: 1, count: 3 },
+    ],
+    pickaxes: 3,
+  },
+  10: {
+    enemies: [
+      { type: "FRANKENSTEIN", count: 0 },
+      { type: "KNIGHT", count: 0 },
+      { type: "SKELETON", count: 10 },
+      { type: "DEVIL", count: 0 },
+    ],
+    traps: 5,
+    crystals: [
+      { type: "rosa", level: 4, count: 5 },
+      { type: "blanco", level: 1, count: 3 },
+    ],
+    pickaxes: 3,
+  },
 };
 
 // También puedes mover otras constantes que tengas por ahí
@@ -202,93 +326,184 @@ export interface Card {
   name: string;
   color: string;
   bonus: any;
-  icon: "attack" | "energy" | "pickaxe" | "crit";
+  icon: "attack" | "lightning" | "pickaxe" | "crit" | "defense";
 }
 
 // DEFINICIÓN DEL POOL DE CARTAS INDIVIDUALES
 const CARD_POOL: Card[] = [
   // --- COMUNES (Blancas) ---
   {
-    name: "Afilado Básico",
+    name: "Crit +0.05",
+    type: "Común",
+    color: "#ffffff",
+    bonus: { crit: 0.05 },
+    icon: "crit",
+  },
+  {
+    name: "Defense +1",
+    type: "Común",
+    color: "#ffffff",
+    bonus: { defense: 1 },
+    icon: "defense",
+  },
+  {
+    name: "Attack +1",
     type: "Común",
     color: "#ffffff",
     bonus: { attack: 1 },
     icon: "attack",
   },
   {
-    name: "Bebida Energética",
+    name: "+5 energy",
     type: "Común",
     color: "#ffffff",
-    bonus: { energy: 15 },
-    icon: "energy",
+    bonus: { energy: 5 },
+    icon: "lightning",
   },
   {
-    name: "Pico de Madera",
+    name: "+10 energy",
     type: "Común",
     color: "#ffffff",
-    bonus: { pickaxe: 2 },
+    bonus: { energy: 10 },
+    icon: "lightning",
+  },
+  {
+    name: "+1 pickaxe",
+    type: "Común",
+    color: "#ffffff",
+    bonus: { pickaxe: 1 },
     icon: "pickaxe",
+  },
+  {
+    name: "+5 max energy",
+    type: "Rara",
+    color: "#4592e5",
+    bonus: { maxEnergy: 5 },
+    icon: "lightning",
+  },
+  {
+    name: "+10 max energy",
+    type: "Rara",
+    color: "#4592e5",
+    bonus: { maxEnergy: 10 },
+    icon: "lightning",
   },
 
   // --- RARAS (Azules) ---
   {
-    name: "Entrenamiento Real",
+    name: "+2 Attack",
     type: "Rara",
     color: "#4592e5",
-    bonus: { attack: 3 },
+    bonus: { attack: 2 },
     icon: "attack",
   },
   {
-    name: "Corazón de Hierro",
+    name: "+15 max energy",
+    type: "Rara",
+    color: "#4592e5",
+    bonus: { maxEnergy: 15 },
+    icon: "lightning",
+  },
+  {
+    name: "+20 max energy",
     type: "Rara",
     color: "#4592e5",
     bonus: { maxEnergy: 20 },
-    icon: "energy",
+    icon: "lightning",
   },
   {
-    name: "Ojo de Halcón",
+    name: "+0.1 Crit",
     type: "Rara",
     color: "#4592e5",
-    bonus: { crit: 0.05 },
+    bonus: { crit: 0.1 },
     icon: "crit",
+  },
+  {
+    name: "Defense +2",
+    type: "Rara",
+    color: "#4592e5",
+    bonus: { defense: 2 },
+    icon: "defense",
+  },
+  {
+    name: "+2 pickaxe",
+    type: "Rara",
+    color: "#4592e5",
+    bonus: { pickaxe: 2 },
+    icon: "pickaxe",
   },
 
   // --- ÉPICAS (Moradas) ---
   {
-    name: "Furia del Berserker",
+    name: "+3 Attack",
     type: "Épica",
     color: "#b145e5",
-    bonus: { attack: 5, crit: 0.1 },
+    bonus: { attack: 3 },
     icon: "attack",
   },
   {
-    name: "Cinturón de Minero",
+    name: "+3 pickaxe",
     type: "Épica",
     color: "#b145e5",
-    bonus: { pickaxe: 8 },
+    bonus: { pickaxe: 3 },
     icon: "pickaxe",
   },
   {
-    name: "Mega Vitamina",
+    name: "+25 max energy",
     type: "Épica",
     color: "#b145e5",
-    bonus: { maxEnergy: 40 },
-    icon: "energy",
+    bonus: { maxEnergy: 25 },
+    icon: "lightning",
+  },
+  {
+    name: "+3 defense",
+    type: "Épica",
+    color: "#b145e5",
+    bonus: { defense: 3 },
+    icon: "defense",
+  },
+  {
+    name: "+0.15 Crit",
+    type: "Épica",
+    color: "#b145e5",
+    bonus: { crit: 0.15 },
+    icon: "crit",
   },
 
   // --- LEGENDARIAS (Naranjas/Doradas) ---
   {
-    name: "Bendición del Titán",
+    name: "+5 Attack",
     type: "Legendaria",
     color: "#ff8c00",
-    bonus: { attack: 10, crit: 0.2 },
+    bonus: { attack: 5 },
     icon: "attack",
   },
   {
-    name: "Pico de Diamante Ancestral",
+    name: "+5 defense",
     type: "Legendaria",
     color: "#ff8c00",
-    bonus: { pickaxe: 15, energy: 50 },
+    bonus: { defense: 5 },
+    icon: "defense",
+  },
+  {
+    name: "+0.25 Crit",
+    type: "Legendaria",
+    color: "#ff8c00",
+    bonus: { crit: 0.25 },
+    icon: "crit",
+  },
+  {
+    name: "+50 max energy",
+    type: "Legendaria",
+    color: "#ff8c00",
+    bonus: { maxEnergy: 50 },
+    icon: "lightning",
+  },
+  {
+    name: "+10 pickaxe",
+    type: "Legendaria",
+    color: "#ff8c00",
+    bonus: { pickaxe: 10 },
     icon: "pickaxe",
   },
 ];

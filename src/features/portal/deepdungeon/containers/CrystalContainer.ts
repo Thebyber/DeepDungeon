@@ -51,19 +51,6 @@ export class CrystalContainer extends Phaser.GameObjects.Container {
   }
 
   private collect() {
-    const scene = this.scene as DeepDungeonScene;
-    const puntos = DUNGEON_POINTS.CRYSTALS[crystalName];
-    // Forzamos que shapeId tenga un valor aunque falle la carga (por defecto 1)
-    const finalLevel = this.menaLevel || 1;
-
-    //console.log(`✅ [CONTENEDOR] Enviando datos correctos: ${this.type} - Nivel: ${finalLevel}`);
-
-    scene.portalService?.send("CRYSTAL_MINED", {
-      crystalType: this.type,
-      shapeId: finalLevel, // <--- Aquí garantizamos que NO sea undefined
-    });
-    // 3. ENVIAR PUNTOS (Usando la acción genérica ADD_POINTS)
-    scene.portalService?.send("ADD_POINTS", { amount: puntos });
     this.destroy();
   }
 }

@@ -88,12 +88,12 @@ export const portalMachine = createMachine<Context, DungeonEvent, PortalState>({
     jwt: getJwt(),
     state: CONFIG.API_URL ? undefined : OFFLINE_FARM,
     stats: {
-      energy: 100,
-      maxEnergy: 100,
+      energy: 1000,
+      maxEnergy: 1000,
       currentLevel: 1,
-      inventory: { pickaxe: 3 },
+      inventory: { pickaxe: 1 },
       targetScore: 0,
-      attack: 1,
+      attack: 100,
       defense: 1,
       criticalChance: 0.1,
     },
@@ -174,18 +174,31 @@ export const portalMachine = createMachine<Context, DungeonEvent, PortalState>({
             },
           }),
         },
-        HIT_TRAP: {
-          actions: assign({
-            stats: (ctx, event) => ({
-              ...ctx.stats,
-              energy: Math.max(0, ctx.stats.energy - event.damage),
+        HIT_TRAP: [
+          {
+            // Si la energía llega a 0, NO cambiamos de estado todavía.
+            // Solo actualizamos la energía a 0. La escena detectará esto.
+            cond: (ctx, event) => ctx.stats.energy - event.damage <= 0,
+            actions: assign({
+              stats: (ctx, event) => ({
+                ...ctx.stats,
+                energy: 0,
+              }),
             }),
-            codex: (ctx) => ({
-              ...ctx.codex,
-              trapsTriggered: ctx.codex.trapsTriggered + 1,
+          },
+          {
+            actions: assign({
+              stats: (ctx, event) => ({
+                ...ctx.stats,
+                energy: Math.max(0, ctx.stats.energy - event.damage),
+              }),
+              codex: (ctx) => ({
+                ...ctx.codex,
+                trapsTriggered: ctx.codex.trapsTriggered + 1,
+              }),
             }),
-          }),
-        },
+          },
+        ],
         ENEMY_KILLED: {
           actions: assign((context, event: any) => {
             const type = (
@@ -244,7 +257,6 @@ export const portalMachine = createMachine<Context, DungeonEvent, PortalState>({
                 },
               };
             },
-            // 🔴 ESTO ES LO QUE TE FALTA PARA QUE SE VEA EN TU INVENTARIO PERSONALIZADO
             stats: (context, event: any) => {
               const { crystalType, shapeId } = event;
               const itemKey = `mena_${crystalType}_${shapeId}`;
@@ -296,23 +308,32 @@ export const portalMachine = createMachine<Context, DungeonEvent, PortalState>({
         },
         NEXT_MAP: {
           actions: assign({
-            stats: (ctx) => {
-              const nextLevel = ctx.stats.currentLevel + 1;
+            stats: (ctx, event: any) => {
+              // Usamos el nivel que viene del evento, o sumamos 1 si no viene nada (por seguridad)
+              const nextLevel = event.level;
+
+              // Si el evento no trae nivel o si el nivel es el mismo que ya tenemos, NO HACEMOS NADA.
+              // Esto evita que al elegir la carta se sume un +1 accidental.
+              if (!nextLevel || nextLevel === ctx.stats.currentLevel) {
+                return ctx.stats;
+              }
               return {
                 ...ctx.stats,
                 currentLevel: nextLevel,
+                // Curamos un poco de energía al pasar de nivel
                 energy: Math.min(ctx.stats.maxEnergy, ctx.stats.energy + 15),
-                // CORRECCIÓN: targetScore se actualiza aquí dentro
+                // Sumamos los puntos por completar el nivel anterior
                 targetScore:
                   ctx.stats.targetScore +
                   DUNGEON_POINTS.LEVEL_REWARD(ctx.stats.currentLevel),
               };
             },
+            // Resetear el progreso específico del piso que acabamos de dejar
             levelProgress: {
               enemies: {},
               crystals: {},
             },
-            // CORRECCIÓN: dungeonPoints fuera de stats
+            // Sumar puntos de recompensa a la moneda de la tienda
             dungeonPoints: (ctx) =>
               ctx.dungeonPoints +
               DUNGEON_POINTS.LEVEL_REWARD(ctx.stats.currentLevel),
@@ -358,6 +379,7 @@ export const portalMachine = createMachine<Context, DungeonEvent, PortalState>({
             },
           }),
         },
+        GAME_OVER: "gameOver",
       }, // <-- ESTE CIERRA EL BLOQUE 'on' de 'playing'
     }, // <-- ESTE CIERRA EL ESTADO 'playing'
     gameOver: {

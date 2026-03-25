@@ -96,11 +96,15 @@ export const CardSelectionHUD: React.FC = () => {
                 src={
                   card.icon === "attack"
                     ? SUNNYSIDE.icons.sword
-                    : card.icon === "energy"
-                      ? SUNNYSIDE.icons.bolt
-                      : card.icon === "pickaxe"
-                        ? SUNNYSIDE.icons.hammer
-                        : SUNNYSIDE.icons.expression_confused
+                    : card.icon === "lightning"
+                      ? SUNNYSIDE.icons.lightning
+                      : card.icon === "crit"
+                        ? "world/DeepDungeonAssets/crit.png"
+                        : card.icon === "defense"
+                          ? "world/DeepDungeonAssets/shield.png"
+                          : card.icon === "pickaxe"
+                            ? "world/DeepDungeonAssets/pickaxe.png"
+                            : SUNNYSIDE.icons.expression_confused
                 }
                 className="w-9 my-2"
                 alt={card.icon}

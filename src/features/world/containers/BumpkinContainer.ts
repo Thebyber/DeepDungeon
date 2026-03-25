@@ -109,6 +109,7 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
   dodgeAttackChance = 0;
   public isHurting = false;
   public isAttacking = false;
+  public isDead = false;
   isAxe = false;
   public isMining = false;
   isBurning = false;
@@ -733,11 +734,11 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
         this.attackSpriteKey as string,
         {
           start: 0,
-          end: 7,
+          end: 9,
         },
       ),
       repeat: 0,
-      frameRate: frameRate,
+      frameRate: 10,
     });
   }
 
@@ -750,7 +751,7 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
         this.miningSpriteKey as string,
         {
           start: 0,
-          end: 7,
+          end: 9,
         },
       ),
       repeat: 0,
@@ -783,7 +784,7 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
         this.axeSpriteKey as string,
         {
           start: 0,
-          end: 7,
+          end: 9,
         },
       ),
       repeat: 0,
@@ -798,10 +799,10 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
         this.swimmingSpriteKey as string,
         {
           start: 0,
-          end: 7,
+          end: 11,
         },
       ),
-      repeat: 0,
+      repeat: -1,
       frameRate: 10,
     });
   }
@@ -813,7 +814,7 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
         this.hammeringSpriteKey as string,
         {
           start: 0,
-          end: 7,
+          end: 22,
         },
       ),
       repeat: 0,
@@ -1565,6 +1566,15 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
     );
   }
 
+  //Sounds
+  private addSound(
+    key: string,
+    loop = false,
+    volume = 0.2,
+  ): Phaser.Sound.BaseSound {
+    return this.scene.sound.add(key, { loop, volume });
+  }
+
   // Halloween
   public carry() {
     if (
@@ -1607,12 +1617,13 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
     ) {
       try {
         //this.addSound("deathPlayer").play();
+        this.isDead = true;
         this.sprite.anims.play(this.deathAnimationKey as string, true);
         onAnimationComplete(
           this.sprite,
           this.deathAnimationKey as string,
           () => {
-            //this.portalService?.send("GAME_OVER");
+            this.portalService?.send("GAME_OVER");
           },
         );
       } catch (e) {
@@ -1621,12 +1632,13 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
           "Bumpkin Container: Error playing carry idle animation: ",
           e,
         );
+        this.portalService?.send("GAME_OVER");
       }
     }
   }
 
   public attack() {
-    //this.addSound("sword").play();
+    this.addSound("sword_attack").play();
     if (
       this.sprite?.anims &&
       this.scene?.anims.exists(this.attackAnimationKey as string) &&

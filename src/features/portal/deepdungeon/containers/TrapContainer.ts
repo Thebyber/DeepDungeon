@@ -1,19 +1,24 @@
 export class TrapContainer extends Phaser.GameObjects.Container {
   private sprite: Phaser.GameObjects.Sprite;
   private isActivated: boolean = false;
+  private animKey: string;
 
-  constructor(scene: Phaser.Scene, x: number, y: number) {
+  constructor(scene: Phaser.Scene, x: number, y: number, level: number) {
     super(scene, x, y);
 
-    // Cargamos el sprite (frame 0 inicial)
-    this.sprite = scene.add.sprite(0, 0, "spikes", 0);
+    // 1. Determinar qué sprite usar según el nivel
+    const textureKey = level >= 6 && level <= 10 ? "spikes2" : "spikes";
+    this.animKey = `${textureKey}_anim`;
+
+    // 2. Crear el sprite con el frame inicial
+    this.sprite = scene.add.sprite(0, 0, textureKey, 0);
     this.add(this.sprite);
 
-    // CREAR ANIMACIÓN DE 5 FRAMES (0 a 4)
-    if (!scene.anims.exists("spikes_anim")) {
+    // 3. Crear la animación dinámica (se adapta a spikes o spikes2)
+    if (!scene.anims.exists(this.animKey)) {
       scene.anims.create({
-        key: "spikes_anim",
-        frames: scene.anims.generateFrameNumbers("spikes", {
+        key: this.animKey,
+        frames: scene.anims.generateFrameNumbers(textureKey, {
           start: 0,
           end: 4,
         }),
@@ -22,19 +27,22 @@ export class TrapContainer extends Phaser.GameObjects.Container {
       });
     }
 
-    this.setDepth(1); // Debajo de los pies
+    this.setDepth(1);
     scene.add.existing(this);
   }
-  public activate(_level: number) {
+
+  public activate() {
     if (this.isActivated) return;
     this.isActivated = true;
 
-    // Solo animación visual
-    this.sprite.play("spikes_anim");
+    // Usamos la animKey guardada en el constructor
+    this.sprite.play(this.animKey);
 
     this.scene.time.delayedCall(1000, () => {
-      this.sprite.setFrame(0);
-      this.isActivated = false;
+      if (this.active) {
+        this.sprite.setFrame(0);
+        this.isActivated = false;
+      }
     });
   }
 }

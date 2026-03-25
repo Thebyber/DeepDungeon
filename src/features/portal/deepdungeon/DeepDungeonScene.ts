@@ -99,9 +99,43 @@ export class DeepDungeonScene extends BaseScene {
       "backgroundMusic",
       "/world/DeepDungeonAssets/backgroundMusic.wav",
     );
+    //Bumpkin sounds
+    this.load.audio(
+      "sword_attack",
+      "/world/DeepDungeonAssets/sword_attack.mp3",
+    );
+    //Enemies sounds
+    this.load.audio(
+      "skeleton_attack",
+      "/world/DeepDungeonAssets/skeleton_attack.mp3",
+    );
+    this.load.audio(
+      "knight_attack",
+      "/world/DeepDungeonAssets/knight_attack.mp3",
+    );
+    this.load.audio(
+      "frankenstein_attack",
+      "/world/DeepDungeonAssets/frankenstein_attack.wav",
+    );
+    this.load.audio(
+      "frankenstein_attackAoE",
+      "/world/DeepDungeonAssets/frankenstein_attackAoE.mp3",
+    );
+    this.load.audio(
+      "devil_attack",
+      "/world/DeepDungeonAssets/devil_attack.wav",
+    );
+    this.load.audio(
+      "devil_attackAoE",
+      "/world/DeepDungeonAssets/devil_attackAoE.wav",
+    );
 
     //Trampas
     this.load.spritesheet("spikes", "world/DeepDungeonAssets/spikes.png", {
+      frameWidth: 96,
+      frameHeight: 64,
+    });
+    this.load.spritesheet("spikes2", "world/DeepDungeonAssets/spikes2.png", {
       frameWidth: 96,
       frameHeight: 64,
     });
@@ -117,11 +151,25 @@ export class DeepDungeonScene extends BaseScene {
         frameHeight: 13,
       },
     );
-    this.load.image("potion_attack", "world/DeepDungeonAssets/pickaxe.png");
-    this.load.image("shield_up", "world/DeepDungeonAssets/pickaxe.png");
-    this.load.image("energy_big", "world/DeepDungeonAssets/pickaxe.png");
-    this.load.image("energy_small", "world/DeepDungeonAssets/pickaxe.png");
-    this.load.image("crit_star", "world/DeepDungeonAssets/pickaxe.png");
+    this.load.spritesheet(
+      "energy_big",
+      "world/DeepDungeonAssets/lightning10.png",
+      {
+        frameWidth: 16,
+        frameHeight: 12,
+      },
+    );
+    this.load.spritesheet(
+      "energy_small",
+      "world/DeepDungeonAssets/lightning5.png",
+      {
+        frameWidth: 12,
+        frameHeight: 12,
+      },
+    );
+    this.load.image("potion_attack", "world/DeepDungeonAssets/sword.png");
+    this.load.image("shield_up", "world/DeepDungeonAssets/shield.png");
+    this.load.image("crit_star", "world/DeepDungeonAssets/crit.png");
     this.load.image("pickaxe", "world/DeepDungeonAssets/pickaxe.png");
     this.load.spritesheet("skeleton", "world/DeepDungeonAssets/pickaxe.png", {
       frameWidth: 96,
@@ -129,15 +177,15 @@ export class DeepDungeonScene extends BaseScene {
     });
     this.load.spritesheet(
       "skeleton_idle",
-      "world/DeepDungeonAssets/skeleton_idle1.png",
+      "world/DeepDungeonAssets/skeleton_idle.png",
       {
-        frameWidth: 32,
-        frameHeight: 16,
+        frameWidth: 96,
+        frameHeight: 64,
       },
     );
     this.load.spritesheet(
       "skeleton_hurt",
-      "world/DeepDungeonAssets/skeleton_hurt_strip7.png",
+      "world/DeepDungeonAssets/skeleton_hurt.png",
       {
         frameWidth: 96,
         frameHeight: 64,
@@ -145,7 +193,7 @@ export class DeepDungeonScene extends BaseScene {
     );
     this.load.spritesheet(
       "skeleton_walk",
-      "world/DeepDungeonAssets/skeleton_walk_strip8.png",
+      "world/DeepDungeonAssets/skeleton_walk.png",
       {
         frameWidth: 96,
         frameHeight: 64,
@@ -153,7 +201,7 @@ export class DeepDungeonScene extends BaseScene {
     );
     this.load.spritesheet(
       "skeleton_attack",
-      "world/DeepDungeonAssets/skeleton_attack_strip7.png",
+      "world/DeepDungeonAssets/skeleton_attack.png",
       {
         frameWidth: 96,
         frameHeight: 64,
@@ -161,7 +209,7 @@ export class DeepDungeonScene extends BaseScene {
     );
     this.load.spritesheet(
       "skeleton_dead",
-      "world/DeepDungeonAssets/skeleton_death_strip10.png",
+      "world/DeepDungeonAssets/skeleton_death.png",
       {
         frameWidth: 96,
         frameHeight: 64,
@@ -333,21 +381,21 @@ export class DeepDungeonScene extends BaseScene {
         16,
         [this.wallLayer], // Asegúrate de que esto sea un Array de capas de colisión
       );
-      this.backgroundMusic = this.sound.add("backgroundMusic", {
-        loop: true,
-        volume: 0.1,
-      });
-      this.backgroundMusic.play();
     }
 
     const levelData = LEVEL_MAPS[this.currentLevel];
+
+    this.backgroundMusic = this.sound.add("backgroundMusic", {
+      loop: true,
+      volume: 0.2,
+    });
+    this.backgroundMusic.play();
 
     if (this.currentPlayer) {
       // 2. Usar las coordenadas de la constante
       const startX = levelData.playerStart.x + 8;
       const startY = levelData.playerStart.y + 4;
       this.currentPlayer.setPosition(startX, startY);
-      this.spawnStairsRandomly();
 
       this.gridMovement = new GridMovement(
         this,
@@ -386,6 +434,10 @@ export class DeepDungeonScene extends BaseScene {
       this.scene.run("DungeonHUD");
       this.scene.bringToTop("DungeonHUD");
     }
+    this.events.once("shutdown", () => {
+      this.events.off("PLAYER_MOVED");
+      this.backgroundMusic.stop(); // Evita que la música se solape al cambiar de nivel
+    });
   }
   public spawnEnemy(type: EnemyType, x: number, y: number) {
     const stats = ENEMY_TYPES[type];
@@ -420,14 +472,21 @@ export class DeepDungeonScene extends BaseScene {
       const pTy = Math.floor(this.currentPlayer.y / 16);
 
       if (tx === pTx && ty === pTy) {
-        //const damage = PlayerState.getInstance().getLevel() <= 5 ? 2 : 5;
-        //PlayerState.getInstance().consumeEnergy(damage);
         const damage = currentLevel <= 5 ? 2 : 5;
+
+        // Comprobamos si este golpe matará al jugador
+        const currentEnergy =
+          this.portalService?.state.context.stats.energy ?? 0;
+
         this.portalService?.send("HIT_TRAP", { damage });
 
-        if (this.currentPlayer.hurt) this.currentPlayer.hurt();
+        if (currentEnergy - damage <= 0) {
+          //2. SI LA TRAMPA TE MATA, EJECUTAMOS LA MUERTE
+          this.handlePlayerDeath();
+          return;
+        }
 
-        // IMPORTANTE: Si golpeamos al jugador, no necesitamos chequear enemigos en este tile
+        if (this.currentPlayer.hurt) this.currentPlayer.hurt();
         return;
       }
     }
@@ -451,6 +510,14 @@ export class DeepDungeonScene extends BaseScene {
     super.update();
 
     if (!this.currentPlayer || !this.cursorKeys) return;
+    if (this.currentPlayer.isDead) return;
+
+    // 🔴 1. COMPROBACIÓN DE MUERTE CENTRALIZADA
+    const energy = this.portalService?.state.context.stats.energy ?? 100;
+    if (energy < 1) {
+      this.handlePlayerDeath();
+      return;
+    }
 
     const body = this.currentPlayer.body as Phaser.Physics.Arcade.Body;
     if (body) {
@@ -461,7 +528,9 @@ export class DeepDungeonScene extends BaseScene {
     // Si el jugador está atacando o sufriendo daño, BLOQUEAMOS el input.
     // Esto evita que "atropelles" enemigos o que las animaciones se pisen.
     const isBusy =
-      this.currentPlayer.isAttacking || this.currentPlayer.isHurting;
+      this.currentPlayer.isAttacking ||
+      this.currentPlayer.isHurting ||
+      this.currentPlayer.isMining;
 
     if (!isBusy) {
       // Solo permitimos movimiento y acciones si NO está ocupado
@@ -480,8 +549,16 @@ export class DeepDungeonScene extends BaseScene {
     }
   }
   private loadBumpkinAnimations() {
-    if (!this.currentPlayer) return;
+    if (!this.currentPlayer || this.currentPlayer.isDead) return;
     if (!this.cursorKeys) return;
+    if (
+      this.currentPlayer.isMining ||
+      this.currentPlayer.isAttacking ||
+      this.currentPlayer.isHurting ||
+      this.currentPlayer.isSwimming
+    ) {
+      return;
+    }
     let animation!: AnimationKeys;
     if (
       !this.currentPlayer.isHurting &&
@@ -523,7 +600,7 @@ export class DeepDungeonScene extends BaseScene {
 
     // Al presionar "1"
     if (Phaser.Input.Keyboard.JustDown(this.playerKeys.DEATH)) {
-      player.dead();
+      this.handlePlayerDeath();
     }
   }
   private spawnPickaxes(count: number) {
@@ -627,7 +704,7 @@ export class DeepDungeonScene extends BaseScene {
       // 3. CREAR Y GUARDAR
       if (!this.isTileOccupied(tile.pixelX, tile.pixelY)) {
         // Crear trampa
-        const trap = new TrapContainer(this, x, y);
+        const trap = new TrapContainer(this, x, y, this.currentLevel);
         this.traps.push(trap);
         this.markTileAsOccupied(tile.pixelX, tile.pixelY);
       }
@@ -671,22 +748,49 @@ export class DeepDungeonScene extends BaseScene {
     if (this.isTransitioning) return;
     this.isTransitioning = true;
 
-    // 1. Solo enviamos UN evento.
-    // Como tu máquina tiene "NEXT_MAP", usamos ese.
-    this.portalService?.send("NEXT_MAP");
-    this.portalService.send("OPEN_CARD_SELECTOR");
+    // Calculamos el siguiente número
+    const nextLevel = this.currentLevel + 1;
+
+    // 1. Enviamos el nivel EXPLÍCITO a la máquina
+    this.portalService?.send("NEXT_MAP", { level: nextLevel });
+    this.portalService?.send("OPEN_CARD_SELECTOR");
 
     // 2. Pausamos físicas y eventos
     this.physics.pause();
     this.events.off("PLAYER_MOVED");
     this.events.off("UPDATE_ENEMIES");
 
-    // 3. Transición visual
     this.cameras.main.fadeOut(500, 0, 0, 0);
     this.cameras.main.once("camerafadeoutcomplete", () => {
-      // Importante: Sacamos el nivel del contexto de la máquina porque ya se sumó +1 allí
-      const nextLevel = this.portalService.state.context.stats.currentLevel;
+      // 2. Iniciamos la nueva escena con el mismo número
       this.scene.start("deep_dungeon", { level: nextLevel });
+    });
+  }
+
+  // Nuevo método en la escena:
+  private handlePlayerDeath() {
+    // Si ya está muerto, salimos para no repetir
+    if (!this.currentPlayer || this.currentPlayer.isDead) return;
+
+    // 1. Bloqueo lógico
+    this.currentPlayer.isDead = true;
+
+    // 2. IMPORTANTE: No uses physics.pause(), porque congela todo.
+    // Solo desactiva el cuerpo del jugador.
+    if (this.currentPlayer.body) {
+      (this.currentPlayer.body as Phaser.Physics.Arcade.Body).enable = false;
+    }
+
+    // 3. Detener enemigos para que no estorben la animación
+    this.enemies?.forEach((enemy) => {
+      if (enemy.active) enemy.playAnimationEnemies("idle");
+    });
+
+    // 4. Disparar la animación
+    this.currentPlayer.dead();
+
+    this.time.delayedCall(1200, () => {
+      this.portalService?.send("GAME_OVER");
     });
   }
   private spawnCrystals(type: CrystalType, menaLevel: number, count: number) {
@@ -771,33 +875,29 @@ export class DeepDungeonScene extends BaseScene {
       crystal.isBeingMined = true;
 
       if (this.currentPlayer) {
-        this.currentPlayer.mining();
+        this.currentPlayer.isMining = true; // 1. BLOQUEAMOS AL JUGADOR
+        this.currentPlayer.mining(); // 2. INICIAMOS ANIMACIÓN
       }
 
-      // 1. GASTAR PICO
+      // Gasto de recursos y envío a la máquina...
       this.portalService?.send("UPDATE_STATS", {
-        stats: {
-          inventory: {
-            ...stats?.inventory,
-            pickaxe: pickaxes - 1,
-          },
-        },
+        stats: { inventory: { ...stats?.inventory, pickaxe: pickaxes - 1 } },
       });
-
-      // 2. ENVIAR A LA MÁQUINA
-      // CAMBIO CLAVE: Usamos 'menaLevel' que es como lo definiste en el Container
-      const crystalType = crystal.type;
-      const shapeId = crystal.menaLevel; // <--- ANTES DECÍA 'level', POR ESO DABA UNDEFINED
-
-      //console.log(`💎 Minando: ${crystalType} con nivel: ${shapeId}`);
 
       this.portalService?.send("CRYSTAL_MINED", {
-        crystalType: String(crystalType),
-        shapeId: Number(shapeId), // Nos aseguramos de que sea un número
+        crystalType: String(crystal.type),
+        shapeId: Number(crystal.menaLevel),
       });
 
-      // 3. Animación de desaparición
-      this.time.delayedCall(300, () => {
+      // 3. EL DELAY PARA VOLVER A LA NORMALIDAD
+      this.time.delayedCall(800, () => {
+        // Ajusta a la duración de tu animación
+        if (this.currentPlayer) {
+          this.currentPlayer.isMining = false; // LIBERAMOS EL ESTADO
+          this.currentPlayer.idle(); // FORZAMOS IDLE
+        }
+
+        // Animación de desaparición del cristal
         this.tweens.add({
           targets: crystal,
           scale: 0,
@@ -806,7 +906,6 @@ export class DeepDungeonScene extends BaseScene {
           onComplete: () => {
             this.crystals = this.crystals.filter((c) => c !== crystal);
             crystal.destroy();
-            this.currentPlayer?.idle();
           },
         });
       });
@@ -860,13 +959,17 @@ export class DeepDungeonScene extends BaseScene {
     if (
       this.currentLevel === 1 ||
       this.currentLevel === 2 ||
-      this.currentLevel === 3
+      this.currentLevel === 3 ||
+      this.currentLevel === 4 ||
+      this.currentLevel === 5
     )
       this.darknessMask.fill(0x191a27, 1);
     else if (
-      this.currentLevel === 4 ||
-      this.currentLevel === 5 ||
-      this.currentLevel === 6
+      this.currentLevel === 6 ||
+      this.currentLevel === 7 ||
+      this.currentLevel === 8 ||
+      this.currentLevel === 9 ||
+      this.currentLevel === 10
     )
       this.darknessMask.fill(0x271714, 1);
     this.darknessMask.setDepth(2000);
@@ -878,5 +981,23 @@ export class DeepDungeonScene extends BaseScene {
     // IMPORTANTE: Dibujamos el círculo centrado en (0,0)
     // Así, cuando borremos en (x, y), el centro será exactamente (x, y)
     this.visionCircle.fillCircle(0, 0, radioVisión);
+  }
+  public isNearWater(tileX: number, tileY: number): boolean {
+    const waterLayer = this.layers["Water"];
+    if (!waterLayer) return false;
+
+    // Revisamos la baldosa actual y las 4 vecinas (arriba, abajo, izquierda, derecha)
+    const neighbors = [
+      { x: 0, y: 0 },
+      { x: 1, y: 0 },
+      { x: -1, y: 0 },
+      { x: 0, y: 1 },
+      { x: 0, y: -1 },
+    ];
+
+    return neighbors.some((offset) => {
+      const tile = waterLayer.getTileAt(tileX + offset.x, tileY + offset.y);
+      return tile !== null; // Si hay un tile de agua cerca, es zona prohibida
+    });
   }
 }
