@@ -6,7 +6,7 @@ on:
 jobs:
   deploy:
     concurrency: portal-deploy
-    environment: "Chaacs Temple"
+    environment: "DeepDungeon Portal"
     runs-on: ubuntu-latest
     steps:
       - name: Get current date
@@ -29,7 +29,7 @@ jobs:
           NODE_OPTIONS: --max-old-space-size=6144
           CI: false
 
-          VITE_PORTAL_APP: "chaacs-temple"
+          VITE_PORTAL_APP: "deep-dungeon"
           VITE_CLIENT_VERSION: ${{ steps.date.outputs.date }}
           VITE_RELEASE_VERSION: ${{ steps.get_version.outputs.VERSION }}
           VITE_PRIVATE_IMAGE_URL: "https://sunflower-land.com/game-assets"
