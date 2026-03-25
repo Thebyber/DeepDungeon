@@ -6,7 +6,6 @@ on:
 jobs:
   deploy:
     concurrency: portal-deploy
-    environment: "DeepDungeon Portal"
     runs-on: ubuntu-latest
     steps:
       - name: Get current date
