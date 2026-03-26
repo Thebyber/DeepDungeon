@@ -95,7 +95,7 @@ export const DeepDungeon: React.FC = () => {
       {gameState && (
         <>
           <DeepDungeonHUD />
-          <DeepDungeonPhaser />
+          <DeepDungeonPhaser key={portalState.context.startedAt} />
         </>
       )}
     </div>

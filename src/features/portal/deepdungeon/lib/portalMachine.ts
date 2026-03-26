@@ -410,7 +410,31 @@ export const portalMachine = createMachine<Context, DungeonEvent, PortalState>({
     }, // <-- ESTE CIERRA EL ESTADO 'playing'
     gameOver: {
       on: {
-        RETRY: "initialising",
+        RETRY: {
+          target: "initialising",
+          actions: assign((context) => ({
+            // Resetamos las stats al valor inicial
+            stats: {
+              energy: 100,
+              maxEnergy: 100,
+              currentLevel: 1,
+              inventory: { pickaxe: 1 },
+              targetScore: 0,
+              attack: 1,
+              defense: 1,
+              criticalChance: 0.1,
+            },
+            // Limpiamos el progreso del nivel actual
+            levelProgress: {
+              enemies: {},
+              crystals: {},
+            },
+            // Opcional: ¿Quieres resetear los puntos totales o mantenerlos?
+            // Si quieres resetearlos, ponlos a 0 aquí:
+            dungeonPoints: 0,
+            rerollCost: 100,
+          })),
+        },
       },
     },
     winner: {},

@@ -35,7 +35,7 @@ export const ExhaustedAlert: React.FC = () => {
           className="text-white font-pixel shadow-text text-center uppercase"
           style={{ fontSize: `${PIXEL_SCALE * 12}px`, color: "#ef4444" }}
         >
-          {`¡Te has quedado sin energía!`}
+          {`GAME OVER, YOU'RE EXHAUSTED!`}
         </h2>
 
         {/* Ahora podemos añadir botones de acción fácilmente */}
@@ -44,7 +44,7 @@ export const ExhaustedAlert: React.FC = () => {
           onClick={() => portalService.send("RETRY")}
           style={{ fontSize: `${PIXEL_SCALE * 8}px` }}
         >
-          {`Reintentar`}
+          {`Retry`}
         </button>
       </InnerPanel>
     </div>
