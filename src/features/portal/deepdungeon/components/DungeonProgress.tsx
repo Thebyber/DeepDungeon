@@ -4,8 +4,8 @@ import { PortalContext } from "../lib/PortalProvider";
 import { InnerPanel } from "components/ui/Panel";
 import { Label } from "components/ui/Label";
 import { SUNNYSIDE } from "assets/sunnyside";
-import { LEVEL_DESIGNS } from "../DeepDungeonConstants";
 import { ENEMY_TYPES, EnemyType } from "../lib/Enemies";
+import { LEVEL_DESIGNS } from "../DeepDungeonConstants";
 
 // --- 1. Definimos el Slot visual aquí mismo para evitar el error de ReferenceError ---
 const DungeonItemSlot: React.FC<{
@@ -16,95 +16,89 @@ const DungeonItemSlot: React.FC<{
   hp?: number;
   atk?: number;
   def?: number;
-  crit?: number; // Nueva prop para el crítico
-}> = ({ name, current, total, image, hp, atk, def, crit }) => {
+  crit?: number;
+  damageAoE?: number;
+}> = ({ name, current, total, image, hp, atk, def, crit, damageAoE }) => {
   const isComplete = current >= total;
 
   return (
-    <div className="flex flex-col items-center bg-[#ead4aa] border border-[#754733] p-1 rounded-sm relative w-full h-full min-h-[110px]">
-      {/* 🟢 AJUSTE DE NOMBRE: Contenedor con altura mínima y texto auto-ajustable */}
-      <div className="w-full flex justify-center items-center min-h-[18px] mb-1 px-0.5">
-        <span
-          className="text-[5px] font-pixel text-brown-800 uppercase text-center leading-tight break-all"
-          style={{
-            display: "-webkit-box",
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: "vertical",
-            overflow: "hidden",
-          }}
-        >
-          {name.replace(/_/g, " ")}{" "}
-          {/* Limpiamos los guiones bajos para que quepa mejor */}
+    <div className="flex flex-col items-center bg-[#ead4aa] border border-[#754733] p-2 rounded-sm relative w-full h-full min-h-[180px]">
+      {/* 1. NOMBRE CENTRADO */}
+      <div className="w-full flex justify-center items-center mb-2">
+        <span className="text-[6px] font-pixel text-brown-800 uppercase text-center leading-tight">
+          {name.replace(/_/g, " ")}
         </span>
       </div>
 
-      {/* Imagen del Item */}
-      <div className="flex-1 flex items-center justify-center">
-        <img
-          src={image}
-          className="w-7 h-7 object-contain"
-          alt={name}
-          style={{ imageRendering: "pixelated" }}
-          onError={(e) => (e.currentTarget.src = "assets/icons/unknown.png")}
-        />
-      </div>
+      {/* 2. IMAGEN DEL ENEMIGO */}
+      <img
+        src={image}
+        className="w-8 h-8 object-contain mb-2"
+        style={{ imageRendering: "pixelated" }}
+        onError={(e) => (e.currentTarget.src = "assets/icons/unknown.png")}
+      />
 
-      {/* Estadísticas de combate: Compactadas para dejar espacio al nombre */}
-      <div className="grid grid-cols-2 gap-x-1 gap-y-[1px] mt-1 mb-1 leading-none w-full border-t border-brown-600/20 pt-1">
+      {/* 3. STATS CENTRADOS (Usamos flex-wrap y justify-center) */}
+      <div className="w-full border-t border-brown-600/20 pt-2 flex flex-wrap justify-center gap-x-3 gap-y-2 mb-2">
         {hp !== undefined && (
-          <div className="flex items-center justify-center gap-0.5">
-            {/* Usamos la ruta directa que definiste en Phaser */}
-
+          <div className="flex items-center gap-1">
             <span className="text-[6px] font-pixel text-red-700">{hp}</span>
             <img
               src="world/DeepDungeonAssets/heart.png"
-              alt="Heart"
-              className="w-3.5 h-3.5 object-contain" // w-1.5 es aprox 6px, ajusta según necesites
+              className="w-5 h-5"
+              alt="HP"
             />
           </div>
         )}
         {atk !== undefined && (
-          <div className="flex items-center justify-center gap-0.5">
-            {/* Usamos la ruta directa que definiste en Phaser */}
-
-            <span className="text-[6px] font-pixel text-red-700">{atk}</span>
+          <div className="flex items-center gap-1">
+            <span className="text-[6px] font-pixel text-orange-700">{atk}</span>
             <img
               src="world/DeepDungeonAssets/sword.png"
-              alt="Sword"
-              className="w-3.5 h-3.5 object-contain" // w-1.5 es aprox 6px, ajusta según necesites
+              className="w-5 h-5"
+              alt="ATK"
             />
           </div>
         )}
         {def !== undefined && (
-          <div className="flex items-center justify-center gap-0.5">
-            {/* Usamos la ruta directa que definiste en Phaser */}
-
-            <span className="text-[6px] font-pixel text-red-700">{def}</span>
+          <div className="flex items-center gap-1">
+            <span className="text-[6px] font-pixel text-blue-700">{def}</span>
             <img
               src="world/DeepDungeonAssets/shield.png"
-              alt="Shield"
-              className="w-3.5 h-3.5 object-contain" // w-1.5 es aprox 6px, ajusta según necesites
+              className="w-5 h-5"
+              alt="DEF"
             />
           </div>
         )}
         {crit !== undefined && (
-          <div className="flex items-center justify-center gap-0.5">
-            {/* Usamos la ruta directa que definiste en Phaser */}
-
-            <span className="text-[6px] font-pixel text-red-700">
-              {`${crit * 100}%`}
+          <div className="flex items-center gap-1">
+            <span className="text-[6px] font-pixel text-purple-700">
+              {Math.round(crit * 100)}
+              {"%"}
             </span>
             <img
               src="world/DeepDungeonAssets/crit.png"
-              alt="Crit"
-              className="w-3.5 h-3.5 object-contain" // w-1.5 es aprox 6px, ajusta según necesites
+              className="w-5 h-5"
+              alt="CRIT"
+            />
+          </div>
+        )}
+        {damageAoE !== undefined && damageAoE > 0 && (
+          <div className="flex items-center gap-1">
+            <span className="text-[6px] font-pixel text-orange-600">
+              {damageAoE}
+            </span>
+            <img
+              src="world/DeepDungeonAssets/AoEatq.png"
+              className="w-5 h-5"
+              alt="AoE"
             />
           </div>
         )}
       </div>
 
-      {/* Progreso: Barra inferior limpia */}
-      <div className="flex items-center gap-1 mt-auto w-full justify-center bg-brown-200/30 rounded-sm py-0.5">
+      {/* 4. PROGRESO AL FINAL */}
+      <div className="flex items-center gap-1 mt-auto w-full justify-center bg-brown-200/40 rounded-sm py-1">
         <span
           className={`text-[8px] font-pixel ${isComplete ? "text-green-700" : "text-brown-700"}`}
         >
@@ -175,6 +169,7 @@ export const DungeonProgress: React.FC<{
                   image={`world/DeepDungeonAssets/${typeKey}.png`}
                   hp={staticStats?.hp}
                   atk={staticStats?.damage}
+                  damageAoE={staticStats?.damageAoE}
                   def={staticStats?.defense}
                   crit={staticStats?.criticalChance}
                 />
@@ -183,7 +178,7 @@ export const DungeonProgress: React.FC<{
 
           {category === "Crystals" &&
             levelData.crystals.map((c) => {
-              const itemKey = `mena_${c.type}_${c.level}`;
+              const itemKey = `${c.type}_crystal_${c.level}`;
               return (
                 <DungeonItemSlot
                   key={`${currentLevel}-${itemKey}`} // Key única por nivel

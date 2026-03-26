@@ -57,12 +57,15 @@ export class PickaxeContainer extends Phaser.GameObjects.Container {
     if (this.isCollected) return;
     this.isCollected = true;
 
-    // 1. Lógica global (para el HUD y persistencia)
+    // 1. Notificar a la máquina de estados
     this.scene.portalService?.send("PICKAXE_FOUND", { amount: 1 });
 
-    // 2. Lógica local (para que la escena de Phaser se entere INSTANTÁNEAMENTE)
-    // Accedemos a las stats del objeto player que pasamos por Props
+    // 2. MOSTRAR EL TEXTO FLOTANTE
+    // Usamos las coordenadas actuales (this.x, this.y) del container
+    // El label puede ser "+1 Pickaxe" o el que prefieras
+    this.scene.spawnFloatingText(this.x, this.y, "+1 Pickaxe");
 
+    // 3. Destruir el objeto
     this.destroy();
   }
 }

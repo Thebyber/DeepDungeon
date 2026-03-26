@@ -4,7 +4,7 @@ import { BaseScene, NPCBumpkin } from "features/world/scenes/BaseScene";
 import { GridMovement } from "./lib/GridMovement";
 import { ENEMY_TYPES, EnemyType } from "./lib/Enemies";
 import { EnemyContainer } from "./containers/EnemyContainer";
-import { AnimationKeys } from "./DeepDungeonConstants";
+import { AnimationKeys, CRYSTAL_DROP_TABLE } from "./DeepDungeonConstants";
 //import { ANIMATION } from "features/world/lib/animations";
 import { PickaxeContainer } from "./containers/PickaxeContainer";
 import { TrapContainer } from "./containers/TrapContainer";
@@ -24,7 +24,7 @@ export const NPCS: NPCBumpkin[] = [
 ];
 
 // Tipos para Cristales
-type CrystalType = "rosa" | "blanco" | "azul" | "mixto";
+type CrystalType = "pink" | "white" | "blue" | "prismora";
 interface LootConfig {
   [key: string]: number;
 }
@@ -65,6 +65,7 @@ export class DeepDungeonScene extends BaseScene {
   public mapKey!: string;
   private occupiedTiles: Set<string> = new Set();
   public crystals: CrystalContainer[] = [];
+  private energyOrbsGroup!: Phaser.Physics.Arcade.Group;
   private darknessMask?: Phaser.GameObjects.RenderTexture;
   private visionCircle?: Phaser.GameObjects.Graphics;
   private backgroundMusic!: Phaser.Sound.BaseSound;
@@ -113,12 +114,12 @@ export class DeepDungeonScene extends BaseScene {
     this.load.tilemapTiledJSON(mapKey, mapPath);
 
     //Crystals
-    const tipos = ["rosa", "blanco", "azul", "mixto"];
+    const tipos = ["pink", "white", "blue", "prismora"];
 
     tipos.forEach((tipo) => {
       // Usamos un bucle del 1 al 5
       for (let i = 1; i <= 5; i++) {
-        const key = `mena_${tipo}_${i}`;
+        const key = `${tipo}_crystal_${i}`;
         const path = `world/DeepDungeonAssets/${key}.png`;
 
         this.load.image(key, path);
@@ -175,6 +176,24 @@ export class DeepDungeonScene extends BaseScene {
     });
     //Heart icon
     this.load.image("heart_icon", "world/DeepDungeonAssets/heart.png");
+    //Energy orbs
+    this.load.image("lightning", "world/DeepDungeonAssets/lightning.png");
+    this.load.spritesheet(
+      "lightning5", // ESTA ES LA DE 6-10 ENERGÍA
+      "world/DeepDungeonAssets/lightning5.png",
+      {
+        frameWidth: 12,
+        frameHeight: 12,
+      },
+    );
+    this.load.spritesheet(
+      "lightning10", // ESTA ES LA DE 6-10 ENERGÍA
+      "world/DeepDungeonAssets/lightning10.png",
+      {
+        frameWidth: 16,
+        frameHeight: 12,
+      },
+    );
     //Enemies
     //Skeleton
     this.load.spritesheet(
@@ -201,9 +220,9 @@ export class DeepDungeonScene extends BaseScene {
         frameHeight: 12,
       },
     );
-    this.load.image("potion_attack", "world/DeepDungeonAssets/sword.png");
-    this.load.image("shield_up", "world/DeepDungeonAssets/shield.png");
-    this.load.image("crit_star", "world/DeepDungeonAssets/crit.png");
+    this.load.image("sword", "world/DeepDungeonAssets/sword.png");
+    this.load.image("shield", "world/DeepDungeonAssets/shield.png");
+    this.load.image("crit", "world/DeepDungeonAssets/crit.png");
     this.load.image("pickaxe", "world/DeepDungeonAssets/pickaxe.png");
     this.load.spritesheet("skeleton", "world/DeepDungeonAssets/pickaxe.png", {
       frameWidth: 96,
@@ -393,7 +412,9 @@ export class DeepDungeonScene extends BaseScene {
   async create() {
     super.create();
     this.occupiedTiles.clear(); // Limpiar al iniciar el nivel
-
+    this.energyOrbsGroup = this.physics.add.group({
+      classType: Phaser.Physics.Arcade.Sprite,
+    });
     // 2. Ahora vinculamos las capas que BaseScene ya creó por nosotros
     // El objeto 'this.layers' se llena automáticamente en BaseScene.initialiseMap()
     this.groundLayer = this.layers["Ground"];
@@ -406,6 +427,9 @@ export class DeepDungeonScene extends BaseScene {
       this.groundLayer = this.map.createLayer("Ground", tileset!, 0, 0);
       this.wallLayer = this.map.createLayer("Wall", tileset!, 0, 0);
     }
+    if (this.wallLayer) {
+      this.physics.add.collider(this.energyOrbsGroup, this.wallLayer);
+    }
 
     // 4. Activar colisiones para el movimiento celda a celda
     const player = this.currentPlayer as any;
@@ -413,6 +437,16 @@ export class DeepDungeonScene extends BaseScene {
       this.gridMovement = new GridMovement(this, player, 16, {
         walls: this.wallLayer as Phaser.Tilemaps.TilemapLayer,
       });
+    }
+    // --- NUEVO: Configurar que el jugador recoja la energía al tocarla ---
+    if (this.currentPlayer) {
+      this.physics.add.overlap(
+        this.currentPlayer,
+        this.energyOrbsGroup,
+        (p, orb) => this.collectEnergy(orb as Phaser.Physics.Arcade.Sprite),
+        undefined,
+        this,
+      );
     }
 
     const levelData = LEVEL_MAPS[this.currentLevel];
@@ -827,35 +861,39 @@ export class DeepDungeonScene extends BaseScene {
       this.portalService?.send("GAME_OVER");
     });
   }
-  private spawnCrystals(type: CrystalType, menaLevel: number, count: number) {
+  private spawnCrystals(
+    type: CrystalType,
+    crystalLevel: number,
+    count: number,
+  ) {
     const lootTable: Record<CrystalType, Record<number, LootConfig>> = {
-      rosa: {
-        1: { rosa: 1, blanco: 0, azul: 0 },
-        2: { rosa: 2, blanco: 0, azul: 0 },
-        3: { rosa: 3, blanco: 0, azul: 0 },
-        4: { rosa: 4, blanco: 0, azul: 0 },
-        5: { rosa: 5, blanco: 0, azul: 0 },
+      pink: {
+        1: { pink: 1, white: 0, blue: 0 },
+        2: { pink: 2, white: 0, blue: 0 },
+        3: { pink: 3, white: 0, blue: 0 },
+        4: { pink: 4, white: 0, blue: 0 },
+        5: { pink: 5, white: 0, blue: 0 },
       },
-      blanco: {
-        1: { rosa: 0, blanco: 1, azul: 0 },
-        2: { rosa: 0, blanco: 2, azul: 0 },
-        3: { rosa: 0, blanco: 3, azul: 0 },
-        4: { rosa: 0, blanco: 4, azul: 0 },
-        5: { rosa: 0, blanco: 5, azul: 0 },
+      white: {
+        1: { pink: 0, white: 1, blue: 0 },
+        2: { pink: 0, white: 2, blue: 0 },
+        3: { pink: 0, white: 3, blue: 0 },
+        4: { pink: 0, white: 4, blue: 0 },
+        5: { pink: 0, white: 5, blue: 0 },
       },
-      azul: {
-        1: { rosa: 0, blanco: 0, azul: 1 },
-        2: { rosa: 0, blanco: 0, azul: 2 },
-        3: { rosa: 0, blanco: 0, azul: 3 },
-        4: { rosa: 0, blanco: 0, azul: 4 },
-        5: { rosa: 0, blanco: 0, azul: 5 },
+      blue: {
+        1: { pink: 0, white: 0, blue: 1 },
+        2: { pink: 0, white: 0, blue: 2 },
+        3: { pink: 0, white: 0, blue: 3 },
+        4: { pink: 0, white: 0, blue: 4 },
+        5: { pink: 0, white: 0, blue: 5 },
       },
-      mixto: {
-        1: { rosa: 1, blanco: 0, azul: 0 },
-        2: { rosa: 1, blanco: 1, azul: 0 },
-        3: { rosa: 1, blanco: 1, azul: 1 },
-        4: { rosa: 1, blanco: 2, azul: 1 },
-        5: { rosa: 1, blanco: 2, azul: 2 },
+      prismora: {
+        1: { pink: 1, white: 0, blue: 0 },
+        2: { pink: 1, white: 1, blue: 0 },
+        3: { pink: 1, white: 1, blue: 1 },
+        4: { pink: 1, white: 2, blue: 1 },
+        5: { pink: 1, white: 2, blue: 2 },
       },
     };
 
@@ -877,7 +915,17 @@ export class DeepDungeonScene extends BaseScene {
         const cx = tile.getCenterX();
         const cy = tile.getCenterY() - 4; // Tu ajuste de altura
 
-        const crystal = new CrystalContainer(this, cx, cy, type, menaLevel);
+        const crystal = new CrystalContainer(this, cx, cy, type, crystalLevel);
+        crystal.on("crystal_destroyed", (data: any) => {
+          const dropKey = `${data.type}_crystal_${data.level}`;
+          const dropData = CRYSTAL_DROP_TABLE[dropKey];
+
+          if (dropData) {
+            const amount = this.calculateWeight(dropData.energyDrops);
+            this.spawnEnergyOrb(data.x, data.y, amount);
+          }
+        });
+
         this.crystals.push(crystal);
         const player = this.currentPlayer as any;
         // 1. Colisión con el Jugador (Picar)
@@ -904,6 +952,106 @@ export class DeepDungeonScene extends BaseScene {
       }
     }
   }
+  // 1. Determina cuánta energía soltar basado en probabilidades (pesos)
+  private calculateWeight(drops: { amount: number; weight: number }[]): number {
+    const totalWeight = drops.reduce((acc, d) => acc + d.weight, 0);
+    let random = Math.random() * totalWeight;
+
+    for (const drop of drops) {
+      if (random < drop.weight) return drop.amount;
+      random -= drop.weight;
+    }
+    return drops[0].amount;
+  }
+
+  // 2. Crea el objeto físico (el rayo) en el mapa
+  private spawnEnergyOrb(x: number, y: number, amount: number) {
+    let texture = "lightning";
+    if (amount >= 5 && amount < 10) texture = "lightning5";
+    if (amount >= 10) texture = "lightning10";
+
+    const orb = this.energyOrbsGroup.create(
+      x,
+      y,
+      texture,
+    ) as Phaser.Physics.Arcade.Sprite;
+
+    orb.setData("value", amount);
+
+    // 2. Nos aseguramos de que colisione con los bordes
+    orb.setCollideWorldBounds(true);
+
+    // --- FIN NUEVO ---
+
+    // Ajuste de Depth para visibilidad (puedes jugar con este valor si usas oscuridad)
+    orb.setDepth(100);
+  }
+
+  // 3. Acción al colisionar el jugador con la energía
+  private collectEnergy(orb: Phaser.Physics.Arcade.Sprite) {
+    const value = orb.getData("value");
+    this.portalService?.send("ADD_ENERGY", { amount: value });
+
+    // 1. Creamos el texto con un estilo más sólido
+    const text = this.add
+      .text(orb.x, orb.y - 5, `+${value} Energy`, {
+        fontFamily: "monospace",
+        fontSize: "6px", // Un pelín más grande ayuda a la nitidez
+        color: "#ffff00",
+        stroke: "#000000",
+        resolution: 10,
+        strokeThickness: 2,
+      })
+      .setOrigin(0.5);
+
+    // 2. EN LUGAR DE setRoundPixels, usamos esto para que no se vea borroso:
+    text.setDepth(3000);
+    // Esto fuerza a Phaser a renderizar el texto en posiciones enteras (evita el blur)
+    text.setAlign("center");
+
+    // 3. ANIMACIÓN MÁS LENTA (1.5 segundos)
+    this.tweens.add({
+      targets: text,
+      y: text.y - 35, // Sube un poco más para que de tiempo a leerlo
+      alpha: { from: 1, to: 0 },
+      duration: 1000, // Duración lenta y clara
+      ease: "Linear", // Movimiento constante para que sea fácil de seguir con el ojo
+      onComplete: () => text.destroy(),
+    });
+
+    orb.destroy();
+  }
+  public spawnFloatingText(x: number, y: number, message: string) {
+    // 1. Forzamos la posición inicial a números enteros (Math.floor)
+    const text = this.add
+      .text(Math.floor(x), Math.floor(y) - 5, message, {
+        fontFamily: "monospace", // Usar una fuente monospace ayuda a la rejilla de píxeles
+        fontSize: "6px", // Un tamaño par (16, 20, 24) suele verse mejor
+        color: "#ffffff",
+        stroke: "#000000",
+        resolution: 10,
+        strokeThickness: 2,
+      })
+      .setOrigin(0.5);
+
+    // 2. IMPORTANTE: Subimos mucho el depth para que no lo tape nada
+    text.setDepth(9999);
+
+    // 3. LA CLAVE DE LA NITIDEZ: Forzar redondeo en cada frame
+    this.tweens.add({
+      targets: text,
+      y: text.y - 30, // La distancia que sube
+      alpha: { from: 1, to: 0 }, // Desaparece suavemente
+      duration: 1200, // Duración lenta y legible
+      ease: "Linear", // Movimiento constante
+
+      onUpdate: () => {
+        text.y = Math.round(text.y);
+      },
+
+      onComplete: () => text.destroy(), // Limpiar al terminar
+    });
+  }
   public handleMining(crystal: CrystalContainer) {
     const stats = this.portalService?.state.context.stats;
     const pickaxes = stats?.inventory.pickaxe || 0;
@@ -912,29 +1060,35 @@ export class DeepDungeonScene extends BaseScene {
       crystal.isBeingMined = true;
 
       if (this.currentPlayer) {
-        this.currentPlayer.isMining = true; // 1. BLOQUEAMOS AL JUGADOR
-        this.currentPlayer.mining(); // 2. INICIAMOS ANIMACIÓN
+        this.currentPlayer.isMining = true;
+        this.currentPlayer.mining();
       }
 
-      // Gasto de recursos y envío a la máquina...
       this.portalService?.send("UPDATE_STATS", {
         stats: { inventory: { ...stats?.inventory, pickaxe: pickaxes - 1 } },
       });
 
       this.portalService?.send("CRYSTAL_MINED", {
         crystalType: String(crystal.type),
-        shapeId: Number(crystal.menaLevel),
+        shapeId: Number(crystal.crystalLevel),
       });
 
-      // 3. EL DELAY PARA VOLVER A LA NORMALIDAD
       this.time.delayedCall(800, () => {
-        // Ajusta a la duración de tu animación
         if (this.currentPlayer) {
-          this.currentPlayer.isMining = false; // LIBERAMOS EL ESTADO
-          this.currentPlayer.idle(); // FORZAMOS IDLE
+          this.currentPlayer.isMining = false;
+          this.currentPlayer.idle();
         }
 
-        // Animación de desaparición del cristal
+        // --- EL CAMBIO ESTÁ AQUÍ ---
+        // 1. Emitimos el evento para que salte la energía
+        crystal.emit("crystal_destroyed", {
+          x: crystal.x,
+          y: crystal.y,
+          type: crystal.type,
+          level: crystal.crystalLevel,
+        });
+
+        // 2. Animación de desaparición
         this.tweens.add({
           targets: crystal,
           scale: 0,

@@ -36,6 +36,172 @@ export interface CrystalConfig {
   count: number;
 }
 
+interface DropTable {
+  energyDrops: { amount: number; weight: number }[];
+}
+export const CRYSTAL_DROP_TABLE: Record<string, DropTable> = {
+  pink_crystal_1: {
+    energyDrops: [
+      { amount: 3, weight: 40 },
+      { amount: 4, weight: 20 },
+      { amount: 5, weight: 30 },
+      { amount: 6, weight: 10 },
+    ],
+  },
+  pink_crystal_2: {
+    energyDrops: [
+      { amount: 4, weight: 40 },
+      { amount: 5, weight: 20 },
+      { amount: 6, weight: 30 },
+      { amount: 7, weight: 10 },
+    ],
+  },
+  pink_crystal_3: {
+    energyDrops: [
+      { amount: 5, weight: 40 },
+      { amount: 6, weight: 20 },
+      { amount: 7, weight: 30 },
+      { amount: 8, weight: 10 },
+    ],
+  },
+  pink_crystal_4: {
+    energyDrops: [
+      { amount: 6, weight: 40 },
+      { amount: 7, weight: 20 },
+      { amount: 8, weight: 30 },
+      { amount: 9, weight: 10 },
+    ],
+  },
+  pink_crystal_5: {
+    energyDrops: [
+      { amount: 7, weight: 40 },
+      { amount: 8, weight: 20 },
+      { amount: 9, weight: 30 },
+      { amount: 10, weight: 10 },
+    ],
+  },
+  white_crystal_1: {
+    energyDrops: [
+      { amount: 4, weight: 40 },
+      { amount: 5, weight: 20 },
+      { amount: 6, weight: 30 },
+      { amount: 7, weight: 10 },
+    ],
+  },
+  white_crystal_2: {
+    energyDrops: [
+      { amount: 5, weight: 40 },
+      { amount: 6, weight: 20 },
+      { amount: 7, weight: 30 },
+      { amount: 8, weight: 10 },
+    ],
+  },
+  white_crystal_3: {
+    energyDrops: [
+      { amount: 6, weight: 40 },
+      { amount: 7, weight: 20 },
+      { amount: 8, weight: 30 },
+      { amount: 9, weight: 10 },
+    ],
+  },
+  white_crystal_4: {
+    energyDrops: [
+      { amount: 7, weight: 40 },
+      { amount: 8, weight: 20 },
+      { amount: 9, weight: 30 },
+      { amount: 10, weight: 10 },
+    ],
+  },
+  white_crystal_5: {
+    energyDrops: [
+      { amount: 8, weight: 40 },
+      { amount: 9, weight: 20 },
+      { amount: 10, weight: 30 },
+      { amount: 11, weight: 10 },
+    ],
+  },
+  blue_crystal_1: {
+    energyDrops: [
+      { amount: 5, weight: 40 },
+      { amount: 6, weight: 20 },
+      { amount: 7, weight: 30 },
+      { amount: 8, weight: 10 },
+    ],
+  },
+  blue_crystal_2: {
+    energyDrops: [
+      { amount: 6, weight: 40 },
+      { amount: 7, weight: 20 },
+      { amount: 8, weight: 30 },
+      { amount: 9, weight: 10 },
+    ],
+  },
+  blue_crystal_3: {
+    energyDrops: [
+      { amount: 7, weight: 40 },
+      { amount: 8, weight: 20 },
+      { amount: 9, weight: 30 },
+      { amount: 10, weight: 10 },
+    ],
+  },
+  blue_crystal_4: {
+    energyDrops: [
+      { amount: 8, weight: 40 },
+      { amount: 9, weight: 20 },
+      { amount: 10, weight: 30 },
+      { amount: 11, weight: 10 },
+    ],
+  },
+  blue_crystal_5: {
+    energyDrops: [
+      { amount: 9, weight: 40 },
+      { amount: 10, weight: 20 },
+      { amount: 11, weight: 30 },
+      { amount: 12, weight: 10 },
+    ],
+  },
+  prismora_crystal_1: {
+    energyDrops: [
+      { amount: 8, weight: 40 },
+      { amount: 9, weight: 20 },
+      { amount: 10, weight: 30 },
+      { amount: 11, weight: 10 },
+    ],
+  },
+  prismora_crystal_2: {
+    energyDrops: [
+      { amount: 9, weight: 40 },
+      { amount: 10, weight: 20 },
+      { amount: 11, weight: 30 },
+      { amount: 12, weight: 10 },
+    ],
+  },
+  prismora_crystal_3: {
+    energyDrops: [
+      { amount: 10, weight: 40 },
+      { amount: 11, weight: 20 },
+      { amount: 12, weight: 30 },
+      { amount: 13, weight: 10 },
+    ],
+  },
+  prismora_crystal_4: {
+    energyDrops: [
+      { amount: 11, weight: 40 },
+      { amount: 12, weight: 20 },
+      { amount: 13, weight: 30 },
+      { amount: 14, weight: 10 },
+    ],
+  },
+  prismora_crystal_5: {
+    energyDrops: [
+      { amount: 12, weight: 40 },
+      { amount: 13, weight: 20 },
+      { amount: 14, weight: 30 },
+      { amount: 15, weight: 10 },
+    ],
+  },
+};
+
 export interface EnemyConfig {
   type: "SKELETON" | "KNIGHT" | "FRANKENSTEIN" | "DEVIL"; // Añade aquí más tipos si tienes
   count: number;
@@ -108,8 +274,8 @@ export const LEVEL_DESIGNS: Record<number, LevelDesign> = {
     ],
     traps: 5,
     crystals: [
-      { type: "rosa", level: 4, count: 5 },
-      { type: "blanco", level: 1, count: 3 },
+      { type: "pink", level: 4, count: 5 },
+      { type: "white", level: 1, count: 3 },
     ],
     pickaxes: 3,
   },
@@ -122,9 +288,9 @@ export const LEVEL_DESIGNS: Record<number, LevelDesign> = {
     ],
     traps: 10,
     crystals: [
-      { type: "azul", level: 2, count: 6 },
-      { type: "rosa", level: 4, count: 5 },
-      { type: "mixto", level: 2, count: 1 },
+      { type: "blue", level: 2, count: 6 },
+      { type: "pink", level: 4, count: 5 },
+      { type: "prismora", level: 2, count: 1 },
     ],
     pickaxes: 2,
   },
@@ -136,7 +302,7 @@ export const LEVEL_DESIGNS: Record<number, LevelDesign> = {
       { type: "DEVIL", count: 0 },
     ],
     traps: 15,
-    crystals: [{ type: "mixto", level: 3, count: 8 }],
+    crystals: [{ type: "prismora", level: 3, count: 8 }],
     pickaxes: 6,
   },
   4: {
@@ -147,7 +313,7 @@ export const LEVEL_DESIGNS: Record<number, LevelDesign> = {
       { type: "DEVIL", count: 2 },
     ],
     traps: 10,
-    crystals: [{ type: "mixto", level: 3, count: 8 }],
+    crystals: [{ type: "prismora", level: 3, count: 8 }],
     pickaxes: 6,
   },
   5: {
@@ -159,8 +325,8 @@ export const LEVEL_DESIGNS: Record<number, LevelDesign> = {
     ],
     traps: 5,
     crystals: [
-      { type: "rosa", level: 4, count: 5 },
-      { type: "blanco", level: 1, count: 3 },
+      { type: "pink", level: 4, count: 5 },
+      { type: "white", level: 1, count: 3 },
     ],
     pickaxes: 3,
   },
@@ -173,8 +339,8 @@ export const LEVEL_DESIGNS: Record<number, LevelDesign> = {
     ],
     traps: 5,
     crystals: [
-      { type: "rosa", level: 4, count: 5 },
-      { type: "blanco", level: 1, count: 3 },
+      { type: "pink", level: 4, count: 5 },
+      { type: "white", level: 1, count: 3 },
     ],
     pickaxes: 3,
   },
@@ -187,8 +353,8 @@ export const LEVEL_DESIGNS: Record<number, LevelDesign> = {
     ],
     traps: 5,
     crystals: [
-      { type: "rosa", level: 4, count: 5 },
-      { type: "blanco", level: 1, count: 3 },
+      { type: "pink", level: 4, count: 5 },
+      { type: "white", level: 1, count: 3 },
     ],
     pickaxes: 3,
   },
@@ -201,8 +367,8 @@ export const LEVEL_DESIGNS: Record<number, LevelDesign> = {
     ],
     traps: 5,
     crystals: [
-      { type: "rosa", level: 4, count: 5 },
-      { type: "blanco", level: 1, count: 3 },
+      { type: "pink", level: 4, count: 5 },
+      { type: "white", level: 1, count: 3 },
     ],
     pickaxes: 3,
   },
@@ -215,8 +381,8 @@ export const LEVEL_DESIGNS: Record<number, LevelDesign> = {
     ],
     traps: 5,
     crystals: [
-      { type: "rosa", level: 4, count: 5 },
-      { type: "blanco", level: 1, count: 3 },
+      { type: "pink", level: 4, count: 5 },
+      { type: "white", level: 1, count: 3 },
     ],
     pickaxes: 3,
   },
@@ -229,8 +395,8 @@ export const LEVEL_DESIGNS: Record<number, LevelDesign> = {
     ],
     traps: 5,
     crystals: [
-      { type: "rosa", level: 4, count: 5 },
-      { type: "blanco", level: 1, count: 3 },
+      { type: "pink", level: 4, count: 5 },
+      { type: "white", level: 1, count: 3 },
     ],
     pickaxes: 3,
   },
@@ -257,43 +423,29 @@ export interface DropItem {
 
 export const DROP_ITEMS_CONFIG: Record<string, DropItem> = {
   ATTACK: {
-    sprite: "potion_attack",
-    label: "+1 Ataque",
+    sprite: "sword",
+    label: "+1 Attack",
     action: (stats) => {
       stats.attack += 1;
     },
   },
   DEFENSE: {
-    sprite: "shield_up",
-    label: "+1 Defensa",
+    sprite: "shield",
+    label: "+1 Defense",
     action: (stats) => {
       stats.defense += 1;
     },
   },
-  ENERGY_10: {
-    sprite: "energy_big",
-    label: "+10 Energía",
-    action: (stats) => {
-      stats.energy = Math.min(stats.energy + 10, stats.maxEnergy);
-    },
-  },
-  ENERGY_5: {
-    sprite: "energy_small",
-    label: "+5 Energía",
-    action: (stats) => {
-      stats.energy = Math.min(stats.energy + 5, stats.maxEnergy);
-    },
-  },
   CRIT: {
-    sprite: "crit_star",
-    label: "+5% Crítico",
+    sprite: "crit",
+    label: "+5% Critical Chance",
     action: (stats) => {
       stats.criticalChance += 0.05;
     },
   },
   PICKAXE: {
     sprite: "pickaxe",
-    label: "+1 Pico",
+    label: "+1 Pickaxe",
     action: (stats) => {
       stats.inventory.pickaxe += 1;
     },
@@ -304,26 +456,26 @@ export type DropKey = keyof typeof DROP_ITEMS_CONFIG;
 
 export const DUNGEON_POINTS = {
   CRYSTALS: {
-    mena_rosa_1: 100,
-    mena_rosa_2: 200,
-    mena_rosa_3: 300,
-    mena_rosa_4: 400, // Coincide con tu nivel 4 de rosa
-    mena_rosa_5: 500,
-    mena_blanco_1: 150,
-    mena_blanco_2: 300,
-    mena_blanco_3: 450,
-    mena_blanco_4: 600,
-    mena_blanco_5: 750,
-    mena_azul_1: 200,
-    mena_azul_2: 400,
-    mena_azul_3: 600,
-    mena_azul_4: 800,
-    mena_azul_5: 1000,
-    mena_mixto_1: 250,
-    mena_mixto_2: 500,
-    mena_mixto_3: 750,
-    mena_mixto_4: 1000,
-    mena_mixto_5: 1250,
+    pink_crystal_1: 100,
+    pink_crystal_2: 200,
+    pink_crystal_3: 300,
+    pink_crystal_4: 400, // Coincide con tu nivel 4 de rosa
+    pink_crystal_5: 500,
+    white_crystal_1: 150,
+    white_crystal_2: 300,
+    white_crystal_3: 450,
+    white_crystal_4: 600,
+    white_crystal_5: 750,
+    blue_crystal_1: 200,
+    blue_crystal_2: 400,
+    blue_crystal_3: 600,
+    blue_crystal_4: 800,
+    blue_crystal_5: 1000,
+    prismora_crystal_1: 250,
+    prismora_crystal_2: 500,
+    prismora_crystal_3: 750,
+    prismora_crystal_4: 1000,
+    prismora_crystal_5: 1250,
   },
   ENEMIES: {
     SKELETON: 200,

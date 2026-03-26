@@ -25,8 +25,10 @@ export const DungeonInventory: React.FC<Props> = ({ portalService }) => {
     (key) => key === "pickaxe" && inventory[key] > 0,
   );
 
+  const validCrystals = ["pink", "white", "blue", "prismora"];
+
   const crystals = Object.keys(inventory).filter(
-    (key) => key.startsWith("mena_") && inventory[key] > 0,
+    (key) => validCrystals.includes(key) && inventory[key] > 0,
   );
 
   if (tools.length === 0 && crystals.length === 0) {

@@ -73,7 +73,7 @@ export const DiscoverablesPage: React.FC = () => {
                   className="flex items-center p-1 bg-[#d4a373] border-2 border-[#754733] relative"
                 >
                   <img
-                    src={`src/assets/icons/mena_${crystal.type}_1.png`}
+                    src={`src/assets/icons/${crystal.type}_crystal_1.png`}
                     className="w-6 h-6 mr-2"
                   />
                   <div className="flex flex-col">

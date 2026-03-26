@@ -58,11 +58,19 @@ export const DungeonDrops: React.FC = () => {
                     {/* Icono: Intenta usar ITEM_DETAILS, si no, usa el sprite del config */}
                     <img
                       src={
-                        ITEM_DETAILS[displayName as keyof typeof ITEM_DETAILS]
-                          ?.image ||
-                        `world/DeepDungeonAssets/${loot.key.toLowerCase()}.png`
+                        // 1. Prioridad: Intentamos buscar el sprite técnico en ITEM_DETAILS
+                        // (P.ej. si sprite es "sword", buscamos ITEM_DETAILS["Sword"])
+                        ITEM_DETAILS[
+                          (itemInfo?.sprite.charAt(0).toUpperCase() +
+                            itemInfo?.sprite.slice(
+                              1,
+                            )) as keyof typeof ITEM_DETAILS
+                        ]?.image ||
+                        // 2. Segunda opción: Usar la ruta de tus assets locales con el nombre del sprite
+                        `world/DeepDungeonAssets/${itemInfo?.sprite || loot.key.toLowerCase()}.png`
                       }
                       className="w-5 h-5 mr-2 object-contain"
+                      style={{ imageRendering: "pixelated" }} // Esto asegura que el icono en la UI sea nítido
                       alt={displayName}
                     />
 

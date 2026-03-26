@@ -7,8 +7,8 @@ import { Preloader } from "features/world/scenes/Preloader";
 import { PortalContext } from "./lib/PortalProvider";
 import { useActor } from "@xstate/react";
 import { DeepDungeonScene } from "./DeepDungeonScene";
-import { NPCModals } from "features/world/ui/NPCModals";
-import { InteractableModals } from "features/world/ui/InteractableModals";
+//import { NPCModals } from "features/world/ui/NPCModals";
+//import { InteractableModals } from "features/world/ui/InteractableModals";
 
 export const DeepDungeonPhaser: React.FC = () => {
   const { portalService } = useContext(PortalContext);
@@ -84,8 +84,6 @@ export const DeepDungeonPhaser: React.FC = () => {
   return (
     <div>
       <div id="game-content" ref={ref} />
-
-      
     </div>
   );
 };

@@ -598,6 +598,7 @@ export class EnemyContainer extends Phaser.GameObjects.Container {
     if (!config || !config.sprite) return;
 
     const portalService = this.scene.portalService;
+    // Creamos el drop directamente en la escena
     const drop = this.scene.physics.add.sprite(this.x, this.y, config.sprite);
 
     if (drop.body) {
@@ -609,17 +610,23 @@ export class EnemyContainer extends Phaser.GameObjects.Container {
 
     drop.setDepth(40);
 
-    //console.log(`📦 Drop generado: ${selectedKey}`);
+    // Guardamos una referencia local a la escena para el overlap
+    const currentScene = this.scene as DeepDungeonScene;
 
     this.scene.physics.add.overlap(
       this.player!,
       drop,
       () => {
-        //console.log(`%c¡ITEM RECOGIDO! ID: ${selectedKey}`, "color: #bada55; font-weight: bold");
+        // --- SOLUCIÓN AL ERROR ---
+        // Usamos la referencia local 'currentScene' que guardamos arriba
+        if (
+          config.label &&
+          typeof currentScene.spawnFloatingText === "function"
+        ) {
+          currentScene.spawnFloatingText(drop.x, drop.y, config.label);
+        }
 
         if (portalService) {
-          // --- EL CAMBIO CLAVE ---
-          // Enviamos el evento correcto a la máquina
           portalService.send("ITEM_COLLECTED", {
             itemKey: selectedKey,
           });

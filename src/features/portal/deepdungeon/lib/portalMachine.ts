@@ -34,6 +34,7 @@ export type DungeonEvent =
   | { type: "START" }
   | { type: "UPDATE_STATS"; stats: Partial<PlayerStats> }
   | { type: "HIT_TRAP"; damage: number }
+  | { type: "ADD_ENERGY"; amount: number }
   | {
       type: "ENEMY_KILLED";
       enemyName: string;
@@ -199,6 +200,23 @@ export const portalMachine = createMachine<Context, DungeonEvent, PortalState>({
             }),
           },
         ],
+        ADD_ENERGY: {
+          actions: assign({
+            stats: (ctx, event: any) => {
+              const amount = event.amount || 0;
+              // Calculamos la nueva energía sin pasarnos del máximo
+              const newEnergy = Math.min(
+                ctx.stats.maxEnergy,
+                ctx.stats.energy + amount,
+              );
+
+              return {
+                ...ctx.stats,
+                energy: newEnergy,
+              };
+            },
+          }),
+        },
         ENEMY_KILLED: {
           actions: assign((context, event: any) => {
             const type = (
@@ -236,7 +254,7 @@ export const portalMachine = createMachine<Context, DungeonEvent, PortalState>({
           actions: assign({
             levelProgress: (context, event: any) => {
               const { crystalType, shapeId } = event;
-              const itemKey = `mena_${crystalType}_${shapeId}`;
+              const itemKey = `${crystalType}_crystal_${shapeId}`;
               return {
                 ...context.levelProgress,
                 crystals: {
@@ -250,7 +268,7 @@ export const portalMachine = createMachine<Context, DungeonEvent, PortalState>({
             },
             codex: (context, event: any) => {
               const { crystalType, shapeId } = event;
-              const itemKey = `mena_${crystalType}_${shapeId}`;
+              const itemKey = `${crystalType}_crystal_${shapeId}`;
               const currentCrystals = context.codex.crystalsMined || {};
               return {
                 ...context.codex,
@@ -264,7 +282,7 @@ export const portalMachine = createMachine<Context, DungeonEvent, PortalState>({
             },
             stats: (context, event: any) => {
               const { crystalType, shapeId } = event;
-              const itemKey = `mena_${crystalType}_${shapeId}`;
+              const itemKey = `${crystalType}_crystal_${shapeId}`;
               const pointsToAdd =
                 DUNGEON_POINTS.CRYSTALS[
                   itemKey as keyof typeof DUNGEON_POINTS.CRYSTALS
@@ -283,7 +301,7 @@ export const portalMachine = createMachine<Context, DungeonEvent, PortalState>({
             },
             dungeonPoints: (context, event: any) => {
               const { crystalType, shapeId } = event;
-              const itemKey = `mena_${crystalType}_${shapeId}`;
+              const itemKey = `${crystalType}_crystal_${shapeId}`;
               const pointsToAdd =
                 DUNGEON_POINTS.CRYSTALS[
                   itemKey as keyof typeof DUNGEON_POINTS.CRYSTALS

@@ -3,20 +3,20 @@ export class CrystalContainer extends Phaser.GameObjects.Container {
   public isBeingMined: boolean = false;
   private health: number = 1;
   public type: string;
-  public menaLevel: number; // <--- PASO 1: Declarar la propiedad
+  public crystalLevel: number;
 
   constructor(
     scene: Phaser.Scene,
     x: number,
     y: number,
     type: string,
-    menaLevel: number, // Recibes el 4 o el 1
+    crystalLevel: number,
   ) {
     super(scene, x, y);
     this.type = type;
-    this.menaLevel = menaLevel; // <--- PASO 2: Guardarlo para usarlo luego
+    this.crystalLevel = crystalLevel;
 
-    const spriteKey = `mena_${type}_${menaLevel}`;
+    const spriteKey = `${type}_crystal_${crystalLevel}`;
     const sprite = scene.add.sprite(0, 0, spriteKey);
     sprite.setOrigin(0.5, 0.5);
     this.add(sprite);
@@ -26,12 +26,14 @@ export class CrystalContainer extends Phaser.GameObjects.Container {
 
     if (this.body) {
       this.body.setSize(6, 6);
-      this.body.setOffset(0, 0);
+      this.body.setOffset(-3, -3); // Centrado de la hitbox
       this.body.setImmovable(true);
     }
   }
 
   public takeDamage(): boolean {
+    if (this.health <= 0) return false;
+
     this.health--;
 
     // Feedback visual de golpe
@@ -51,6 +53,24 @@ export class CrystalContainer extends Phaser.GameObjects.Container {
   }
 
   private collect() {
-    this.destroy();
+    // --- PASO CLAVE: EMITIR EL EVENTO ANTES DE MORIR ---
+    // Esto le dice a DeepDungeonScene: "Oye, me han roto, suelta la energía"
+    this.emit("crystal_destroyed", {
+      x: this.x,
+      y: this.y,
+      type: this.type,
+      level: this.crystalLevel,
+    });
+
+    // Pequeña animación de desaparición antes del destroy
+    this.scene.tweens.add({
+      targets: this,
+      alpha: 0,
+      scale: 0,
+      duration: 100,
+      onComplete: () => {
+        this.destroy();
+      },
+    });
   }
 }
