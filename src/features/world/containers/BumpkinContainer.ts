@@ -1771,7 +1771,7 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
     }
   }
   public swimming() {
-    //this.addSound("pickaxe").play();
+    this.addSound("swimming").play();
     if (
       this.sprite?.anims &&
       this.scene?.anims.exists(this.swimmingAnimationKey as string) &&

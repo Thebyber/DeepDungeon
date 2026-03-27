@@ -595,6 +595,11 @@ export class EnemyContainer extends Phaser.GameObjects.Container {
   }
   private spawnDrop(selectedKey: DropKey) {
     const config = DROP_ITEMS_CONFIG[selectedKey as DropConfigKey];
+    const playUISound = (fileName: string) => {
+      const audio = new Audio(`/world/DeepDungeonAssets/${fileName}.mp3`);
+      audio.volume = 0.4;
+      audio.play().catch(() => {});
+    };
     if (!config || !config.sprite) return;
 
     const portalService = this.scene.portalService;
@@ -627,6 +632,7 @@ export class EnemyContainer extends Phaser.GameObjects.Container {
         }
 
         if (portalService) {
+          playUISound("win_item");
           portalService.send("ITEM_COLLECTED", {
             itemKey: selectedKey,
           });

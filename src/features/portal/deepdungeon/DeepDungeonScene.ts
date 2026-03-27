@@ -139,6 +139,7 @@ export class DeepDungeonScene extends BaseScene {
       "sword_attack",
       "/world/DeepDungeonAssets/sword_attack.mp3",
     );
+    this.load.audio("swimming", "/world/DeepDungeonAssets/swimming.mp3");
     //Enemies sounds
     this.load.audio(
       "skeleton_attack",
@@ -164,6 +165,19 @@ export class DeepDungeonScene extends BaseScene {
       "devil_attackAoE",
       "/world/DeepDungeonAssets/devil_attackAoE.wav",
     );
+    //Crystal break sound
+    this.load.audio(
+      "mine_crystal",
+      "/world/DeepDungeonAssets/mine_crystal.mp3",
+    );
+    this.load.audio("next_level", "/world/DeepDungeonAssets/next_level.mp3");
+    this.load.audio("card_sound", "/world/DeepDungeonAssets/card_sound.mp3");
+    this.load.audio(
+      "reroll_cards",
+      "/world/DeepDungeonAssets/reroll_cards.mp3",
+    );
+    this.load.audio("win_energy", "/world/DeepDungeonAssets/win_energy.mp3");
+    this.load.audio("win_item", "/world/DeepDungeonAssets/win_item.mp3");
 
     //Trampas
     this.load.spritesheet("spikes", "world/DeepDungeonAssets/spikes.png", {
@@ -818,7 +832,7 @@ export class DeepDungeonScene extends BaseScene {
 
     // Calculamos el siguiente número
     const nextLevel = this.currentLevel + 1;
-
+    this.sound.play("next_level", { volume: 0.5 });
     // 1. Enviamos el nivel EXPLÍCITO a la máquina
     this.portalService?.send("NEXT_MAP", { level: nextLevel });
     this.portalService?.send("OPEN_CARD_SELECTOR");
@@ -990,6 +1004,7 @@ export class DeepDungeonScene extends BaseScene {
   // 3. Acción al colisionar el jugador con la energía
   private collectEnergy(orb: Phaser.Physics.Arcade.Sprite) {
     const value = orb.getData("value");
+    this.sound.play("win_energy", { volume: 0.4 });
     this.portalService?.send("ADD_ENERGY", { amount: value });
 
     // 1. Creamos el texto con un estilo más sólido
@@ -1058,7 +1073,7 @@ export class DeepDungeonScene extends BaseScene {
 
     if (pickaxes > 0 && !crystal.isBeingMined) {
       crystal.isBeingMined = true;
-
+      this.sound.play("mine_crystal", { volume: 0.5 });
       if (this.currentPlayer) {
         this.currentPlayer.isMining = true;
         this.currentPlayer.mining();

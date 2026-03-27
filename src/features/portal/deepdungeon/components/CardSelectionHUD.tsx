@@ -22,12 +22,20 @@ export const CardSelectionHUD: React.FC = () => {
     getRandomCard(),
   ]);
 
+  const playUISound = (fileName: string) => {
+    const audio = new Audio(`/world/DeepDungeonAssets/${fileName}.mp3`);
+    audio.volume = 0.4;
+    audio.play().catch(() => {});
+  };
+
   const handleReroll = () => {
+    playUISound("reroll_cards");
     portalService.send("ON_REROLL");
     setCards([getRandomCard(), getRandomCard(), getRandomCard()]);
   };
 
   const selectCard = (card: Card) => {
+    playUISound("card_sound");
     portalService.send("APPLY_CARD_BONUS", { bonus: card.bonus });
     portalService.send("NEXT_MAP");
   };

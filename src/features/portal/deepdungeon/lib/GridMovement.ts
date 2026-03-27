@@ -106,6 +106,7 @@ export class GridMovement {
       waterLayer?.getTileAtWorldXY(nextGridX + 8, nextGridY + 8) !== null;
     if (isWater) {
       this.currentPlayer.isSwimming = true;
+
       // Activa animación de nadar
     } else {
       this.currentPlayer.isSwimming = false;

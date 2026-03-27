@@ -54,9 +54,14 @@ export class PickaxeContainer extends Phaser.GameObjects.Container {
   }
 
   private collect() {
+    const playUISound = (fileName: string) => {
+      const audio = new Audio(`/world/DeepDungeonAssets/${fileName}.mp3`);
+      audio.volume = 0.4;
+      audio.play().catch(() => {});
+    };
     if (this.isCollected) return;
     this.isCollected = true;
-
+    playUISound("win_item");
     // 1. Notificar a la máquina de estados
     this.scene.portalService?.send("PICKAXE_FOUND", { amount: 1 });
 
