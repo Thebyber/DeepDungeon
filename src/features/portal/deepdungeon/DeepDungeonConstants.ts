@@ -1,4 +1,5 @@
 import { Equipped } from "features/game/types/bumpkin";
+import { translate } from "lib/i18n/translate";
 
 export type AnimationKeys =
   | "walk"
@@ -745,26 +746,26 @@ export const INSTRUCTIONS: {
 }[] = [
   {
     image: "world/DeepDungeonAssets/lightning.png",
-    description: "deepdungeon.instruction1",
+    description: translate("deepdungeon.instructions1"),
   },
   {
     image: "world/DeepDungeonAssets/pickaxe.png",
-    description: "deepdungeon.instruction2",
+    description: translate("deepdungeon.instructions2"),
   },
   {
     image: "world/DeepDungeonAssets/heart.png",
-    description: "deepdungeon.instruction3",
+    description: translate("deepdungeon.instructions3"),
   },
   {
     image: "world/DeepDungeonAssets/sword.png",
-    description: "deepdungeon.instruction4",
+    description: translate("deepdungeon.instructions4"),
   },
   {
     image: "world/DeepDungeonAssets/shield.png",
-    description: "deepdungeon.instruction5",
+    description: translate("deepdungeon.instructions5"),
   },
   {
     image: "world/DeepDungeonAssets/crit.png",
-    description: "deepdungeon.instruction6",
+    description: translate("deepdungeon.instructions6"),
   },
 ];
