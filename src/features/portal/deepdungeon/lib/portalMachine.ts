@@ -136,7 +136,7 @@ const resetGameTransition = {
       score: 0,
       rerollCost: 100,
       startedAt: 0,
-    }),
+    }) as any,
   },
 };
 
