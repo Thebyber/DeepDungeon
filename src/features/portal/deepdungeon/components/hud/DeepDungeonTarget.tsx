@@ -1,10 +1,10 @@
 import React, { useContext } from "react";
 import { useSelector } from "@xstate/react";
-import { PortalContext } from "../lib/PortalProvider";
+import { PortalContext } from "../../lib/PortalProvider";
 import { SUNNYSIDE } from "assets/sunnyside";
 import { Label } from "components/ui/Label";
 import { useAppTranslation } from "lib/i18n/useAppTranslations";
-import { PortalMachineState } from "../lib/portalMachine";
+import { PortalMachineState } from "../../lib/portalMachine";
 
 const _target = (state: PortalMachineState) =>
   state.context.state?.minigames.prizes["deep-dungeon"]?.score ?? 0;

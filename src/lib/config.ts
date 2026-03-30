@@ -67,6 +67,8 @@ const DEPOSIT_V2_CONTRACT = import.meta.env.VITE_DEPOSIT_V2_CONTRACT as string;
 const PET_CONTRACT = import.meta.env.VITE_PET_CONTRACT as string;
 
 // Arcade Mini Games Donation Addresses
+const PORTAL_DONATION_ADDRESS = import.meta.env
+  .VITE_PORTAL_DONATION_ADDRESS as string;
 const GREEDY_GOBLIN_DONATION = import.meta.env
   .VITE_GREEDY_GOBLIN_DONATION as string;
 const CHICKEN_FIGHT_DONATION = import.meta.env
@@ -155,6 +157,7 @@ export const CONFIG = {
   WITHDRAW_FLOWER_CONTRACT,
   PET_CONTRACT,
 
+  PORTAL_DONATION_ADDRESS,
   GREEDY_GOBLIN_DONATION,
   CHICKEN_FIGHT_DONATION,
   PROTECTED_IMAGE_URL,

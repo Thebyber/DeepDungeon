@@ -26,7 +26,7 @@ export const Memory: React.FC<Props> = ({ onClose }) => {
 
   const minigames = useSelector(gameService, _minigames);
   const minigame = minigames.games["deep-dungeon"];
-  const prize = minigames.prizes["memory"];
+  const prize = minigames.prizes["deep-dungeon"];
 
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
 
@@ -50,7 +50,7 @@ export const Memory: React.FC<Props> = ({ onClose }) => {
   }
 
   const onClaim = () => {
-    gameService.send("minigame.prizeClaimed", { id: "memory" });
+    gameService.send("minigame.prizeClaimed", { id: "deep-dungeon" });
 
     onClose();
   };
@@ -65,9 +65,9 @@ export const Memory: React.FC<Props> = ({ onClose }) => {
       <ClaimReward
         onClaim={onClaim}
         reward={{
-          message: t("memory.portal.rewardMessage"),
+          message: t("deepdungeon.portal.rewardMessage"),
           factionPoints: 0,
-          id: "memory-rewards",
+          id: "deepdungeon-rewards",
           items: prize.items,
           wearables: prize.wearables,
           sfl: 0,
@@ -82,15 +82,15 @@ export const Memory: React.FC<Props> = ({ onClose }) => {
       <div className="mb-1">
         <div className="p-2">
           <Label type="default" className="mb-1" icon={factions}>
-            {t("memory.portal.title")}
+            {t("deepdungeon.portal.title")}
           </Label>
-          <InlineDialogue message={t("memory.portal.description")} />
+          <InlineDialogue message={t("deepdungeon.portal.description")} />
         </div>
 
         <MinigamePrizeUI
           prize={prize}
           history={dailyAttempt}
-          mission={t("memory.portal.missionObjective", {
+          mission={t("deepdungeon.portal.missionObjective", {
             targetScore: prize?.score ?? 0,
           })}
         />

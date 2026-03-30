@@ -1,34 +1,46 @@
 import React, { useContext } from "react";
-import { useActor } from "@xstate/react";
+import { useSelector } from "@xstate/react";
 import { PIXEL_SCALE } from "features/game/lib/constants";
 import { SUNNYSIDE } from "assets/sunnyside";
 import { PortalContext } from "../lib/PortalProvider"; // Asegúrate de esta ruta
 import { ResizableBar } from "components/ui/ProgressBar";
 import { InnerPanel } from "components/ui/Panel";
+import { PortalMachineState } from "../lib/portalMachine"; // Asegúrate de esta ruta
 
 import shieldIcon from "./assets/shield.png";
 import swordIcon from "./assets/sword.png";
 import critIcon from "./assets/crit.png";
 
+const _energy = (state: PortalMachineState) => state.context.stats.energy;
+
+// Estas funciones garantizan que React detecte el cambio de número
+const selectEnergy = (state: PortalMachineState) => state.context.stats.energy;
+const selectMaxEnergy = (state: PortalMachineState) =>
+  state.context.stats.maxEnergy;
+const selectScore = (state: PortalMachineState) => state.context.score;
+const selectStats = (state: PortalMachineState) => state.context.stats;
+
 export const EnergyStats: React.FC = () => {
   const { portalService } = useContext(PortalContext);
-  const [portalState] = useActor(portalService);
 
-  // Extraemos todo de la máquina
-  const { stats } = portalState.context;
-  const { energy, maxEnergy, attack, defense, targetScore, criticalChance } =
-    stats;
-  const pickaxes = stats.inventory.pickaxe;
+  // --- 2. SUSCRIPCIÓN ESPECÍFICA ---
+  // useSelector hace que este componente se "despierte" solo cuando estos valores cambian
+  const energy = useSelector(portalService, selectEnergy);
+  const maxEnergy = useSelector(portalService, selectMaxEnergy);
+  const score = useSelector(portalService, selectScore);
+  const stats = useSelector(portalService, selectStats);
 
+  const { attack, defense, criticalChance } = stats;
   const percentage = Math.max(0, Math.min(100, (energy / maxEnergy) * 100));
 
+  // Lógica de color reactiva
   let barColor = "#22c55e";
   if (percentage <= 20) barColor = "#ef4444";
   else if (percentage <= 50) barColor = "#facc15";
 
   return (
     <div className="flex flex-col items-start">
-      {/* 1. TARGET SCORE */}
+      {/* TARGET SCORE */}
       <div
         className="w-fit justify-center flex items-center text-xs relative"
         style={{
@@ -60,7 +72,7 @@ export const EnergyStats: React.FC = () => {
             style={{ width: `${PIXEL_SCALE * 10}px` }}
           />
         </div>
-        <span className="font-pixel ml-1">{targetScore}</span>
+        <span className="font-pixel ml-1">{score}</span>
       </div>
 
       <InnerPanel
@@ -81,7 +93,9 @@ export const EnergyStats: React.FC = () => {
                 outerDimensions={{ width: 70, height: 12 }}
               />
             </div>
-            <style>{`.custom-energy-bar [role="progressbar"] > div { background-color: ${barColor} !important; }`}</style>
+            {/* Sincronizamos el color de la barra con el estado de React */}
+            <style>{`.custom-energy-bar [role="progressbar"] > div { background-color: ${barColor} !important; transition: width 0.3s ease; }`}</style>
+
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <span
                 className="text-white font-pixel shadow-text"
@@ -97,8 +111,6 @@ export const EnergyStats: React.FC = () => {
           <StatItem value={attack} icon={swordIcon} />
           <StatItem value={defense} icon={shieldIcon} />
           <StatItem value={Math.round(criticalChance * 100)} icon={critIcon} />
-
-          {/* <StatItem icon={pickaxeIcon} value={pickaxes} /> */}
         </div>
       </InnerPanel>
     </div>

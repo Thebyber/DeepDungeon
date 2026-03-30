@@ -4,7 +4,11 @@ import { BaseScene, NPCBumpkin } from "features/world/scenes/BaseScene";
 import { GridMovement } from "./lib/GridMovement";
 import { ENEMY_TYPES, EnemyType } from "./lib/Enemies";
 import { EnemyContainer } from "./containers/EnemyContainer";
-import { AnimationKeys, CRYSTAL_DROP_TABLE } from "./DeepDungeonConstants";
+import {
+  AnimationKeys,
+  CRYSTAL_DROP_TABLE,
+  PORTAL_NAME,
+} from "./DeepDungeonConstants";
 //import { ANIMATION } from "features/world/lib/animations";
 import { PickaxeContainer } from "./containers/PickaxeContainer";
 import { TrapContainer } from "./containers/TrapContainer";
@@ -13,6 +17,7 @@ import { CrystalContainer } from "./containers/CrystalContainer"; // Ajusta la r
 import { LEVEL_DESIGNS } from "./DeepDungeonConstants";
 import { LEVEL_MAPS } from "./DeepDungeonConstants";
 import { MachineInterpreter } from "./lib/portalMachine";
+import { GameState } from "features/game/types/game";
 
 export const NPCS: NPCBumpkin[] = [
   {
@@ -55,7 +60,8 @@ interface IDungeonPlayer extends Phaser.GameObjects.Container {
 }
 
 export class DeepDungeonScene extends BaseScene {
-  sceneId: SceneId = "deep_dungeon";
+  private _portalService: MachineInterpreter | undefined;
+  sceneId: SceneId = PORTAL_NAME;
   private gridMovement?: GridMovement;
   public enemies: EnemyContainer[] = [];
   private playerKeys?: Record<string, Phaser.Input.Keyboard.Key>;
@@ -69,22 +75,17 @@ export class DeepDungeonScene extends BaseScene {
   private darknessMask?: Phaser.GameObjects.RenderTexture;
   private visionCircle?: Phaser.GameObjects.Graphics;
   private backgroundMusic!: Phaser.Sound.BaseSound;
+  private lastAttempt!: number;
   groundLayer: any;
   wallLayer: any;
 
   public get portalService() {
-    const service = this.registry.get("portalService");
-    if (!service) {
-      // Esto te ayudará a debuguear si el servicio se pierde
-      // console.warn("PortalService no encontrado en el registry");
-      return undefined;
-    }
-    return service as MachineInterpreter;
+    return this.registry.get("portalService") as MachineInterpreter | undefined;
   }
 
   constructor() {
     super({
-      name: "deep_dungeon",
+      name: PORTAL_NAME,
       map: {
         imageKey: "Tileset-deep-dungeon",
         defaultTilesetConfig: tilesetConfig,
@@ -99,13 +100,13 @@ export class DeepDungeonScene extends BaseScene {
     // Ya no enviamos "UPDATE_STATS" aquí porque NEXT_MAP ya se encargó
     // de subir el nivel y resetear los contadores.
 
-    if (this.cache.tilemap.has("deep_dungeon")) {
-      this.cache.tilemap.remove("deep_dungeon");
+    if (this.cache.tilemap.has("deep-dungeon")) {
+      this.cache.tilemap.remove("deep-dungeon");
     }
   }
   preload() {
-    // Usamos SIEMPRE la misma llave: "deep_dungeon"
-    const mapKey = "deep_dungeon";
+    // Usamos SIEMPRE la misma llave: "deep-dungeon"
+    const mapKey = "deep-dungeon";
     const mapPath = `world/DeepDungeonAssets/map${this.currentLevel}.json`;
 
     //console.log(`Cargando nivel ${this.currentLevel} desde ${mapPath}`);
@@ -518,6 +519,11 @@ export class DeepDungeonScene extends BaseScene {
       this.events.off("PLAYER_MOVED");
       this.backgroundMusic.stop(); // Evita que la música se solape al cambiar de nivel
     });
+    if (this.portalService) {
+      // Forzamos un evento para que el HUD se entere de los stats actuales
+      const stats = this.portalService.state.context.stats;
+      this.portalService.send("UPDATE_STATS", { stats });
+    }
   }
   public spawnEnemy(type: EnemyType, x: number, y: number) {
     const stats = ENEMY_TYPES[type];
@@ -557,9 +563,7 @@ export class DeepDungeonScene extends BaseScene {
         // Comprobamos si este golpe matará al jugador
         const currentEnergy =
           this.portalService?.state.context.stats.energy ?? 0;
-
         this.portalService?.send("HIT_TRAP", { damage });
-
         if (currentEnergy - damage <= 0) {
           //2. SI LA TRAMPA TE MATA, EJECUTAMOS LA MUERTE
           this.handlePlayerDeath();
@@ -591,41 +595,46 @@ export class DeepDungeonScene extends BaseScene {
 
     if (!this.currentPlayer || !this.cursorKeys) return;
     if (this.currentPlayer.isDead) return;
+    if (this.isPlaying) {
+      // 🔴 1. COMPROBACIÓN DE MUERTE CENTRALIZADA
+      const energy = this.portalService?.state.context.stats.energy ?? 100;
+      if (energy < 1) {
+        this.handlePlayerDeath();
+        return;
+      }
 
-    // 🔴 1. COMPROBACIÓN DE MUERTE CENTRALIZADA
-    const energy = this.portalService?.state.context.stats.energy ?? 100;
-    if (energy < 1) {
-      this.handlePlayerDeath();
-      return;
+      const body = this.currentPlayer.body as Phaser.Physics.Arcade.Body;
+      if (body) {
+        body.setVelocity(0, 0);
+      }
+
+      // --- 1. FILTRO DE ESTADO ---
+      // Si el jugador está atacando o sufriendo daño, BLOQUEAMOS el input.
+      // Esto evita que "atropelles" enemigos o que las animaciones se pisen.
+      const isBusy =
+        this.currentPlayer.isAttacking ||
+        this.currentPlayer.isHurting ||
+        this.currentPlayer.isMining;
+
+      if (!isBusy) {
+        // Solo permitimos movimiento y acciones si NO está ocupado
+        this.gridMovement?.handleInput(this.cursorKeys as any);
+        this.handlePlayerActions(); // Aquí es donde disparas el ataque
+      }
+
+      // --- 2. ANIMACIONES Y MÁSCARA ---
+      // Las animaciones deben seguir actualizándose (o el sistema de control de estas)
+      this.loadBumpkinAnimations();
+
+      if (this.darknessMask && this.visionCircle) {
+        const x = this.currentPlayer.x;
+        const y = this.currentPlayer.y;
+        this.darknessMask.erase(this.visionCircle, x, y);
+      }
     }
-
-    const body = this.currentPlayer.body as Phaser.Physics.Arcade.Body;
-    if (body) {
-      body.setVelocity(0, 0);
-    }
-
-    // --- 1. FILTRO DE ESTADO ---
-    // Si el jugador está atacando o sufriendo daño, BLOQUEAMOS el input.
-    // Esto evita que "atropelles" enemigos o que las animaciones se pisen.
-    const isBusy =
-      this.currentPlayer.isAttacking ||
-      this.currentPlayer.isHurting ||
-      this.currentPlayer.isMining;
-
-    if (!isBusy) {
-      // Solo permitimos movimiento y acciones si NO está ocupado
-      this.gridMovement?.handleInput(this.cursorKeys as any);
-      this.handlePlayerActions(); // Aquí es donde disparas el ataque
-    }
-
-    // --- 2. ANIMACIONES Y MÁSCARA ---
-    // Las animaciones deben seguir actualizándose (o el sistema de control de estas)
-    this.loadBumpkinAnimations();
-
-    if (this.darknessMask && this.visionCircle) {
-      const x = this.currentPlayer.x;
-      const y = this.currentPlayer.y;
-      this.darknessMask.erase(this.visionCircle, x, y);
+    if (this.isReady) {
+      this.portalService?.send("START");
+      this.lastAttempt = this.time.now;
     }
   }
   private loadBumpkinAnimations() {
@@ -841,11 +850,17 @@ export class DeepDungeonScene extends BaseScene {
     this.physics.pause();
     this.events.off("PLAYER_MOVED");
     this.events.off("UPDATE_ENEMIES");
+    this.portalService?.send("NEXT_MAP", { level: nextLevel });
+
+    // Dale 100ms para que la máquina actualice el contexto antes de cambiar de escena
+    this.time.delayedCall(100, () => {
+      this.cameras.main.fadeOut(500, 0, 0, 0);
+    });
 
     this.cameras.main.fadeOut(500, 0, 0, 0);
     this.cameras.main.once("camerafadeoutcomplete", () => {
       // 2. Iniciamos la nueva escena con el mismo número
-      this.scene.start("deep_dungeon", { level: nextLevel });
+      this.scene.start("deep-dungeon", { level: nextLevel });
     });
   }
 
@@ -1205,5 +1220,18 @@ export class DeepDungeonScene extends BaseScene {
       const tile = waterLayer.getTileAt(tileX + offset.x, tileY + offset.y);
       return tile !== null; // Si hay un tile de agua cerca, es zona prohibida
     });
+  }
+  public get isPlaying() {
+    return this.portalService?.state.matches("playing") === true;
+  }
+  public get isReady() {
+    return this.portalService?.state.matches("ready") === true;
+  }
+  public get gameState() {
+    return this.registry.get("gameState") as GameState;
+  }
+
+  public get score() {
+    return this.portalService?.state?.context.score ?? 0;
   }
 }

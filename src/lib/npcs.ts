@@ -7,6 +7,7 @@ export type NPCName =
   | "felga" // Fruit dash
   | "minewhack" // Mine Whack
   | "memory" // Memory portal
+  | "deepdungeon" // Deep dungeon portal
   | "digby"
   | "portaller"
   | "gambit"
@@ -203,6 +204,15 @@ export const NPC_WEARABLES: Record<NPCName, Equipped> = {
     shoes: "Bumpkin Boots",
     tool: "Kama",
     hat: "Straw Hat",
+  },
+  deepdungeon: {
+    hair: "Greyed Glory",
+    body: "Infernal Bumpkin Potion",
+    shirt: "Skull Shirt",
+    pants: "Crimstone Pants",
+    shoes: "Crimstone Boots",
+    tool: "Skinning Knife",
+    hat: "Skull Hat",
   },
   pharaoh: {
     body: "Light Brown Farmer Potion",

@@ -1,4 +1,5 @@
 import React, { useState, useContext } from "react";
+import { useSelector } from "@xstate/react";
 import { useActor } from "@xstate/react";
 import { PortalContext } from "../lib/PortalProvider";
 import { PIXEL_SCALE } from "features/game/lib/constants";
@@ -23,6 +24,7 @@ import { CardSelectionHUD } from "./CardSelectionHUD";
 import Decimal from "decimal.js-light";
 import { Box } from "components/ui/Box";
 import pickaxeIcon from "./assets/pickaxe.png";
+import { PortalMachineState } from "../lib/portalMachine";
 // Registramos las 20 variantes (4 colores x 5 formas)
 const colors = ["rosa", "blanco", "azul", "mixto"];
 colors.forEach((color) => {
@@ -34,6 +36,7 @@ colors.forEach((color) => {
     };
   }
 });
+const _isPlaying = (state: PortalMachineState) => state.matches("playing");
 
 export const DeepDungeonHUD: React.FC = () => {
   const { portalService } = useContext(PortalContext);
@@ -43,9 +46,10 @@ export const DeepDungeonHUD: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"Enemies" | "Crystals" | "Drops">(
     "Enemies",
   );
+  const isPlaying = useSelector(portalService, _isPlaying);
 
   // Extraemos stats para los picos
-  const { dungeonPoints, stats } = portalState.context;
+  const { dungeonPoints, score, stats } = portalState.context;
 
   return (
     <HudContainer>

@@ -1,6 +1,10 @@
 import React, { useEffect } from "react";
 import { useInterpret } from "@xstate/react";
 import { MachineInterpreter, portalMachine } from "./portalMachine";
+import {
+  RESTOCK_ATTEMPTS_COST,
+  UNLIMITED_ATTEMPTS_COST,
+} from "../DeepDungeonConstants";
 
 interface PortalContext {
   portalService: MachineInterpreter;
@@ -22,10 +26,12 @@ export const PortalProvider: React.FC<React.PropsWithChildren> = ({
    */
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      // Handle the received message
       if (event.data.event === "purchased") {
-        // Put in your handlers here
-        portalService.send("PURCHASED" as any);
+        if (event.data.sfl === RESTOCK_ATTEMPTS_COST) {
+          portalService.send("PURCHASED_RESTOCK");
+        } else if (event.data.sfl === UNLIMITED_ATTEMPTS_COST) {
+          portalService.send("PURCHASED_UNLIMITED");
+        }
       }
     };
 

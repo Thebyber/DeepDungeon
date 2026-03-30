@@ -7,17 +7,15 @@ import { Preloader } from "features/world/scenes/Preloader";
 import { PortalContext } from "./lib/PortalProvider";
 import { useActor } from "@xstate/react";
 import { DeepDungeonScene } from "./DeepDungeonScene";
-//import { NPCModals } from "features/world/ui/NPCModals";
-//import { InteractableModals } from "features/world/ui/InteractableModals";
 
 export const DeepDungeonPhaser: React.FC = () => {
   const { portalService } = useContext(PortalContext);
   const [portalState] = useActor(portalService);
 
-  const game = useRef<Game>(undefined);
+  const game = useRef<Game>(null);
 
-  // This must match the key of your scene [PortalExampleScene]
-  const scene = "deep_dungeon";
+  // This must match the key of your scene [DeepDungeonScene]
+  const scene = "deep-dungeon";
 
   // Preloader is useful if you want to load the standard Sunflower Land assets + SFX
   const scenes = [Preloader, DeepDungeonScene];

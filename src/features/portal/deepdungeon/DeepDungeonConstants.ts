@@ -1,3 +1,5 @@
+import { Equipped } from "features/game/types/bumpkin";
+
 export type AnimationKeys =
   | "walk"
   | "idle"
@@ -15,6 +17,13 @@ export type AnimationKeys =
 export const PLAYER_DAMAGE = 2;
 // Recompensa por avanzar de nivel
 export const REWARD_ENERGY = 15;
+export const PORTAL_NAME = "deep-dungeon";
+export const PORTAL_TOKEN = "Deep Token";
+export const UNLIMITED_ATTEMPTS_COST = 3;
+export const RESTOCK_ATTEMPTS_COST = 1;
+export const HINT_COST = 0.25;
+export const DAILY_ATTEMPTS = 5;
+export const RESTOCK_ATTEMPTS = 3;
 
 export const onAnimationComplete = (
   object: Phaser.GameObjects.Sprite,
@@ -484,7 +493,7 @@ export const DUNGEON_POINTS = {
     pink_crystal_1: 100,
     pink_crystal_2: 200,
     pink_crystal_3: 300,
-    pink_crystal_4: 400, // Coincide con tu nivel 4 de rosa
+    pink_crystal_4: 400,
     pink_crystal_5: 500,
     white_crystal_1: 150,
     white_crystal_2: 300,
@@ -703,13 +712,13 @@ export const getRandomCard = (): Card => {
   let rarity: Card["type"];
 
   // Lógica de probabilidad (Roguelike)
-  if (rand < 5)
-    rarity = "Legendaria"; // 5%
-  else if (rand < 20)
-    rarity = "Épica"; // 15%
-  else if (rand < 50)
-    rarity = "Rara"; // 30%
-  else rarity = "Común"; // 50%
+  if (rand < 3)
+    rarity = "Legendaria"; // 3%
+  else if (rand < 15)
+    rarity = "Épica"; // 12%
+  else if (rand < 40)
+    rarity = "Rara"; // 25%
+  else rarity = "Común"; // 60%
 
   // Filtramos el pool por la rareza obtenida
   const possibleCards = CARD_POOL.filter((c) => c.type === rarity);
@@ -717,3 +726,45 @@ export const getRandomCard = (): Card => {
   // Retornamos una carta aleatoria de esa rareza
   return possibleCards[Math.floor(Math.random() * possibleCards.length)];
 };
+
+export const DEEPDUNGEON_NPC_WEARABLES: Equipped = {
+  hair: "Greyed Glory",
+  body: "Infernal Bumpkin Potion",
+  shirt: "Skull Shirt",
+  pants: "Crimstone Pants",
+  shoes: "Crimstone Boots",
+  tool: "Skinning Knife",
+  hat: "Skull Hat",
+};
+
+//Guide
+export const INSTRUCTIONS: {
+  image: string;
+  description: string;
+  width?: number;
+}[] = [
+  {
+    image: "world/DeepDungeonAssets/lightning.png",
+    description: "deepdungeon.instruction1",
+  },
+  {
+    image: "world/DeepDungeonAssets/pickaxe.png",
+    description: "deepdungeon.instruction2",
+  },
+  {
+    image: "world/DeepDungeonAssets/heart.png",
+    description: "deepdungeon.instruction3",
+  },
+  {
+    image: "world/DeepDungeonAssets/sword.png",
+    description: "deepdungeon.instruction4",
+  },
+  {
+    image: "world/DeepDungeonAssets/shield.png",
+    description: "deepdungeon.instruction5",
+  },
+  {
+    image: "world/DeepDungeonAssets/crit.png",
+    description: "deepdungeon.instruction6",
+  },
+];

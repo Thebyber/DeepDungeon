@@ -13,11 +13,11 @@ export const NPCS: NPCBumpkin[] = [
 ];
 
 export class PortalExampleScene extends BaseScene {
-  sceneId: SceneId = "deep_dungeon";
+  sceneId: SceneId = "deep-dungeon";
 
   constructor() {
     super({
-      name: "deep_dungeon",
+      name: "deep-dungeon",
       map: {
         json: mapJson,
       },

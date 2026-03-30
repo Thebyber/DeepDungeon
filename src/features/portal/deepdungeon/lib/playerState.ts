@@ -5,7 +5,6 @@ export interface PlayerStats {
   inventory: {
     pickaxe: number;
   };
-  targetScore: number;
   attack: number;
   defense: number;
   criticalChance: number;
