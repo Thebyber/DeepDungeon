@@ -977,3 +977,63 @@ export const POINTS: {
     description: translate("deepdungeon.points9"),
   },
 ];
+export const ENEMIES_GUIDE: {
+  image: string;
+  description: string;
+  width?: number;
+}[] = [
+  {
+    image: "world/DeepDungeonAssets/skeleton.png",
+    description: translate("deepdungeon.enemies1"),
+  },
+  {
+    image: "world/DeepDungeonAssets/knight.png",
+    description: translate("deepdungeon.enemies2"),
+  },
+  {
+    image: "world/DeepDungeonAssets/frankenstein.png",
+    description: translate("deepdungeon.enemies3"),
+  },
+  {
+    image: "world/DeepDungeonAssets/devil.png",
+    description: translate("deepdungeon.enemies4"),
+  },
+];
+export const STATS_GUIDE: {
+  image: string;
+  description: string;
+  width?: number;
+}[] = [
+  {
+    image: "world/DeepDungeonAssets/lightning.png",
+    description: translate("deepdungeon.stats1"),
+  },
+  {
+    image: "world/DeepDungeonAssets/heart.png",
+    description: translate("deepdungeon.stats2"),
+  },
+  {
+    image: "world/DeepDungeonAssets/sword.png",
+    description: translate("deepdungeon.stats3"),
+  },
+  {
+    image: "world/DeepDungeonAssets/AoEatq.png",
+    description: translate("deepdungeon.stats4"),
+  },
+  {
+    image: "world/DeepDungeonAssets/shield.png",
+    description: translate("deepdungeon.stats5"),
+  },
+  {
+    image: "world/DeepDungeonAssets/crit.png",
+    description: translate("deepdungeon.stats6"),
+  },
+  {
+    image: "world/DeepDungeonAssets/greenbar_02.png",
+    description: translate("deepdungeon.stats7"),
+  },
+  {
+    image: "world/DeepDungeonAssets/redbar_02.png",
+    description: translate("deepdungeon.stats8"),
+  },
+];

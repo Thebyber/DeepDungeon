@@ -3,7 +3,12 @@ import React from "react";
 import { useAppTranslation } from "lib/i18n/useAppTranslations";
 import { SquareIcon } from "components/ui/SquareIcon";
 import { Label } from "components/ui/Label";
-import { INSTRUCTIONS, POINTS } from "../../DeepDungeonConstants";
+import {
+  INSTRUCTIONS,
+  POINTS,
+  ENEMIES_GUIDE,
+  STATS_GUIDE,
+} from "../../DeepDungeonConstants";
 import { useSound } from "lib/utils/hooks/useSound";
 
 type Props = {
@@ -29,6 +34,34 @@ export const DeepDungeonGuide: React.FC<Props> = ({ onBack }) => {
         {/* Instructions */}
         <Label type="default">{t(`deepdungeon.instructions`)}</Label>
         {INSTRUCTIONS.map(({ image, description, width = 10 }, index) => (
+          <div key={index}>
+            <div className="flex items-center mb-3 mx-2">
+              <SquareIcon icon={image} width={width} />
+              <p className="text-xs ml-3 flex-1">
+                {t(`deepdungeon.guideDescription`, {
+                  description: description,
+                })}
+              </p>
+            </div>
+          </div>
+        ))}
+        {/* Enemies */}
+        <Label type="default">{t(`deepdungeon.enemies`)}</Label>
+        {ENEMIES_GUIDE.map(({ image, description, width = 10 }, index) => (
+          <div key={index}>
+            <div className="flex items-center mb-3 mx-2">
+              <SquareIcon icon={image} width={width} />
+              <p className="text-xs ml-3 flex-1">
+                {t(`deepdungeon.guideDescription`, {
+                  description: description,
+                })}
+              </p>
+            </div>
+          </div>
+        ))}
+        {/* Stats */}
+        <Label type="default">{t(`deepdungeon.stats`)}</Label>
+        {STATS_GUIDE.map(({ image, description, width = 10 }, index) => (
           <div key={index}>
             <div className="flex items-center mb-3 mx-2">
               <SquareIcon icon={image} width={width} />

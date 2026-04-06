@@ -77,6 +77,7 @@ export const Controls: React.FC<Props> = ({ onBack }) => {
                 </>
               )}
             </div>
+            <Label type="formula">{t(`deepdungeon.controls.mobile`)}</Label>
             <Label type="warning">
               {t(`deepdungeon.controls.moveDescription`)}
             </Label>

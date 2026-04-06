@@ -578,6 +578,32 @@ export class DeepDungeonScene extends BaseScene {
           AXE: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.V),
         };
       }
+      // --- AÑADE AQUÍ EL CONTROL DE SWIPE ---
+      this.input.on("pointerup", (pointer: Phaser.Input.Pointer) => {
+        const swipeThreshold = 50; // Distancia mínima para que cuente como movimiento
+        const dragX = pointer.upX - pointer.downX;
+        const dragY = pointer.upY - pointer.downY;
+
+        // Si el movimiento fue lo suficientemente largo
+        if (Math.max(Math.abs(dragX), Math.abs(dragY)) > swipeThreshold) {
+          // Determinamos si fue más horizontal o vertical
+          if (Math.abs(dragX) > Math.abs(dragY)) {
+            // Movimiento Horizontal
+            if (dragX > 0) {
+              this.gridMovement?.move(16, 0); // Derecha (D)
+            } else {
+              this.gridMovement?.move(-16, 0); // Izquierda (A)
+            }
+          } else {
+            // Movimiento Vertical
+            if (dragY > 0) {
+              this.gridMovement?.move(0, 16); // Abajo (S)
+            } else {
+              this.gridMovement?.move(0, -16); // Arriba (W)
+            }
+          }
+        }
+      });
       //const playerState = PlayerState.getInstance();
       //const currentLevel = PlayerState.getInstance().getLevel();
 
@@ -897,7 +923,7 @@ export class DeepDungeonScene extends BaseScene {
   }
   public spawnEnemy(type: EnemyType, x: number, y: number) {
     const stats = ENEMY_TYPES[type];
-    // Creamos el sprite (ajusta 'slime_green' por el nombre real de tu asset)
+    // Creamos el sprite
     const enemy = this.add.sprite(x, y, stats.sprite);
     // Guardamos sus stats dentro del objeto para usarlos en el combate
     enemy.setData("stats", stats);
