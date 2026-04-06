@@ -91,17 +91,7 @@ export class GridMovement {
     // --- NUEVO: Acceso al servicio mediante la escena ---
     if (this.isMoving || this.frozen) return;
     if ((this.currentPlayer as any).isDead) return;
-    const playerSprite = (this.currentPlayer as any).sprite;
 
-    if (playerSprite) {
-      if (dx > 0) {
-        // Si el movimiento es a la derecha (X positivo)
-        playerSprite.setFlipX(false);
-      } else if (dx < 0) {
-        // Si el movimiento es a la izquierda (X negativo)
-        playerSprite.setFlipX(true);
-      }
-    }
     const scene = this.scene as DeepDungeonScene;
     const service = scene.portalService;
     const stats = service?.state.context.stats;
