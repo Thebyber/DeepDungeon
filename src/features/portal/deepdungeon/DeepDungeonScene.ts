@@ -4,6 +4,7 @@ import { BaseScene, NPCBumpkin } from "features/world/scenes/BaseScene";
 import { GridMovement } from "./lib/GridMovement";
 import { ENEMY_TYPES, EnemyType } from "./lib/Enemies";
 import { EnemyContainer } from "./containers/EnemyContainer";
+import { EventObject } from "xstate";
 import {
   AnimationKeys,
   CRYSTAL_DROP_TABLE,
@@ -124,14 +125,14 @@ export class DeepDungeonScene extends BaseScene {
   private onRetry = (event: EventObject) => {
     if (!this.sys || !this.sys.isActive() || !this.sys.displayList) return;
     if (event.type === "RETRY") {
-      this.restartGameScene({ level: 1 });
+      this.restartGameScene();
     }
   };
 
   private onContinue = (event: EventObject) => {
     if (!this.sys || !this.sys.isActive() || !this.sys.displayList) return;
     if (event.type === "CONTINUE") {
-      this.restartGameScene({ level: 1 });
+      this.restartGameScene();
     }
   };
   private initialiseEvents() {

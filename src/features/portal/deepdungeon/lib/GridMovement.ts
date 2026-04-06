@@ -84,7 +84,7 @@ export class GridMovement {
     }
 
     // 4. Actualizar el estado para el siguiente frame
-    this.wasKeyDown = isAnyKeyDown;
+    this.wasKeyDown = !!isAnyKeyDown;
   }
 
   private move(dx: number, dy: number) {

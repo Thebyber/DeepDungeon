@@ -110,10 +110,7 @@ export const EnergyStats: React.FC = () => {
         <div className="flex justify-between items-center mt-1 px-1">
           <StatItem value={attack} icon={swordIcon} />
           <StatItem value={defense} icon={shieldIcon} />
-          <StatItem
-            value={Math.round(criticalChance * 100) + "%"}
-            icon={critIcon}
-          />
+          <StatItem value={Math.round(criticalChance * 100)} icon={critIcon} />
         </div>
       </InnerPanel>
     </div>
