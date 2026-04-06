@@ -22,7 +22,6 @@ export const PORTAL_NAME = "deep-dungeon";
 export const PORTAL_TOKEN = "Deep Token";
 export const UNLIMITED_ATTEMPTS_COST = 3;
 export const RESTOCK_ATTEMPTS_COST = 1;
-export const HINT_COST = 0.25;
 export const DAILY_ATTEMPTS = 5;
 export const RESTOCK_ATTEMPTS = 3;
 
@@ -258,6 +257,36 @@ export const LEVEL_MAPS: Record<number, LevelConfig> = {
   10: {
     playerStart: { x: 64, y: 272 },
   },
+  11: {
+    playerStart: { x: 160, y: 128 },
+  },
+  12: {
+    playerStart: { x: 32, y: 64 },
+  },
+  13: {
+    playerStart: { x: 240, y: 64 },
+  },
+  14: {
+    playerStart: { x: 288, y: 48 },
+  },
+  15: {
+    playerStart: { x: 64, y: 64 },
+  },
+  16: {
+    playerStart: { x: 48, y: 48 },
+  },
+  17: {
+    playerStart: { x: 192, y: 256 },
+  },
+  18: {
+    playerStart: { x: 64, y: 64 },
+  },
+  19: {
+    playerStart: { x: 64, y: 256 },
+  },
+  20: {
+    playerStart: { x: 64, y: 272 },
+  },
 };
 export const LEVEL_SETTINGS: Record<
   number,
@@ -273,15 +302,11 @@ export const LEVEL_SETTINGS: Record<
   8: { fogColor: 0x271714, fogAlpha: 1.0 },
   9: { fogColor: 0x271714, fogAlpha: 1.0 },
   10: { fogColor: 0x271714, fogAlpha: 1.0 },
+  11: { fogColor: 0x191a27, fogAlpha: 0.7 },
 };
 export const LEVEL_DESIGNS: Record<number, LevelDesign> = {
   1: {
-    enemies: [
-      { type: "FRANKENSTEIN", count: 0 },
-      { type: "KNIGHT", count: 0 },
-      { type: "SKELETON", count: 7 },
-      { type: "DEVIL", count: 0 },
-    ],
+    enemies: [{ type: "SKELETON", count: 7 }],
     traps: 5,
     crystals: [
       { type: "pink", level: 1, count: 5 },
@@ -292,12 +317,7 @@ export const LEVEL_DESIGNS: Record<number, LevelDesign> = {
     pickaxes: 3,
   },
   2: {
-    enemies: [
-      { type: "FRANKENSTEIN", count: 0 },
-      { type: "KNIGHT", count: 0 },
-      { type: "SKELETON", count: 10 },
-      { type: "DEVIL", count: 0 },
-    ],
+    enemies: [{ type: "SKELETON", count: 10 }],
     traps: 5,
     crystals: [
       { type: "pink", level: 2, count: 4 },
@@ -309,10 +329,8 @@ export const LEVEL_DESIGNS: Record<number, LevelDesign> = {
   },
   3: {
     enemies: [
-      { type: "FRANKENSTEIN", count: 0 },
       { type: "KNIGHT", count: 2 },
       { type: "SKELETON", count: 10 },
-      { type: "DEVIL", count: 0 },
     ],
     traps: 5,
     crystals: [
@@ -325,10 +343,8 @@ export const LEVEL_DESIGNS: Record<number, LevelDesign> = {
   },
   4: {
     enemies: [
-      { type: "FRANKENSTEIN", count: 0 },
       { type: "KNIGHT", count: 4 },
       { type: "SKELETON", count: 10 },
-      { type: "DEVIL", count: 0 },
     ],
     traps: 5,
     crystals: [
@@ -344,7 +360,6 @@ export const LEVEL_DESIGNS: Record<number, LevelDesign> = {
       { type: "FRANKENSTEIN", count: 1 },
       { type: "KNIGHT", count: 2 },
       { type: "SKELETON", count: 10 },
-      { type: "DEVIL", count: 0 },
     ],
     traps: 5,
     crystals: [
@@ -435,6 +450,157 @@ export const LEVEL_DESIGNS: Record<number, LevelDesign> = {
     ],
     pickaxes: 3,
   },
+  11: {
+    enemies: [
+      { type: "FRANKENSTEIN", count: 5 },
+      { type: "KNIGHT", count: 10 },
+      { type: "SKELETON", count: 5 },
+      { type: "DEVIL", count: 5 },
+    ],
+    traps: 10,
+    crystals: [
+      { type: "blue", level: 4, count: 2 },
+      { type: "prismora", level: 1, count: 5 },
+      { type: "prismora", level: 3, count: 3 },
+      { type: "prismora", level: 5, count: 1 },
+    ],
+    pickaxes: 3,
+  },
+  12: {
+    enemies: [
+      { type: "FRANKENSTEIN", count: 5 },
+      { type: "KNIGHT", count: 12 },
+      { type: "DEVIL", count: 5 },
+    ],
+    traps: 10,
+    crystals: [
+      { type: "blue", level: 4, count: 2 },
+      { type: "prismora", level: 1, count: 5 },
+      { type: "prismora", level: 3, count: 3 },
+      { type: "prismora", level: 5, count: 1 },
+    ],
+    pickaxes: 3,
+  },
+  13: {
+    enemies: [
+      { type: "FRANKENSTEIN", count: 6 },
+      { type: "KNIGHT", count: 14 },
+      { type: "DEVIL", count: 5 },
+    ],
+    traps: 10,
+    crystals: [
+      { type: "blue", level: 4, count: 2 },
+      { type: "prismora", level: 1, count: 5 },
+      { type: "prismora", level: 3, count: 3 },
+      { type: "prismora", level: 5, count: 1 },
+    ],
+    pickaxes: 3,
+  },
+  14: {
+    enemies: [
+      { type: "FRANKENSTEIN", count: 7 },
+      { type: "KNIGHT", count: 15 },
+      { type: "DEVIL", count: 5 },
+    ],
+    traps: 10,
+    crystals: [
+      { type: "blue", level: 4, count: 2 },
+      { type: "prismora", level: 1, count: 5 },
+      { type: "prismora", level: 3, count: 3 },
+      { type: "prismora", level: 5, count: 1 },
+    ],
+    pickaxes: 3,
+  },
+  15: {
+    enemies: [
+      { type: "FRANKENSTEIN", count: 7 },
+      { type: "KNIGHT", count: 15 },
+      { type: "DEVIL", count: 5 },
+    ],
+    traps: 10,
+    crystals: [
+      { type: "blue", level: 4, count: 2 },
+      { type: "prismora", level: 1, count: 5 },
+      { type: "prismora", level: 3, count: 3 },
+      { type: "prismora", level: 5, count: 1 },
+    ],
+    pickaxes: 3,
+  },
+  16: {
+    enemies: [
+      { type: "FRANKENSTEIN", count: 7 },
+      { type: "KNIGHT", count: 15 },
+      { type: "DEVIL", count: 5 },
+    ],
+    traps: 10,
+    crystals: [
+      { type: "blue", level: 4, count: 2 },
+      { type: "prismora", level: 1, count: 5 },
+      { type: "prismora", level: 3, count: 3 },
+      { type: "prismora", level: 5, count: 1 },
+    ],
+    pickaxes: 3,
+  },
+  17: {
+    enemies: [
+      { type: "FRANKENSTEIN", count: 7 },
+      { type: "KNIGHT", count: 15 },
+      { type: "DEVIL", count: 5 },
+    ],
+    traps: 10,
+    crystals: [
+      { type: "blue", level: 4, count: 2 },
+      { type: "prismora", level: 1, count: 5 },
+      { type: "prismora", level: 3, count: 3 },
+      { type: "prismora", level: 5, count: 1 },
+    ],
+    pickaxes: 3,
+  },
+  18: {
+    enemies: [
+      { type: "FRANKENSTEIN", count: 7 },
+      { type: "KNIGHT", count: 15 },
+      { type: "DEVIL", count: 5 },
+    ],
+    traps: 10,
+    crystals: [
+      { type: "blue", level: 4, count: 2 },
+      { type: "prismora", level: 1, count: 5 },
+      { type: "prismora", level: 3, count: 3 },
+      { type: "prismora", level: 5, count: 1 },
+    ],
+    pickaxes: 3,
+  },
+  19: {
+    enemies: [
+      { type: "FRANKENSTEIN", count: 7 },
+      { type: "KNIGHT", count: 15 },
+      { type: "DEVIL", count: 5 },
+    ],
+    traps: 10,
+    crystals: [
+      { type: "blue", level: 4, count: 2 },
+      { type: "prismora", level: 1, count: 5 },
+      { type: "prismora", level: 3, count: 3 },
+      { type: "prismora", level: 5, count: 1 },
+    ],
+    pickaxes: 3,
+  },
+  20: {
+    enemies: [
+      { type: "FRANKENSTEIN", count: 7 },
+      { type: "KNIGHT", count: 15 },
+      { type: "DEVIL", count: 5 },
+    ],
+    traps: 10,
+    crystals: [
+      { type: "blue", level: 4, count: 2 },
+      { type: "prismora", level: 1, count: 5 },
+      { type: "prismora", level: 3, count: 3 },
+      { type: "prismora", level: 5, count: 1 },
+    ],
+    pickaxes: 3,
+  },
 };
 
 // También puedes mover otras constantes que tengas por ahí
@@ -475,7 +641,7 @@ export const DROP_ITEMS_CONFIG: Record<string, DropItem> = {
     sprite: "crit",
     label: "+5% Critical Chance",
     action: (stats) => {
-      stats.criticalChance += 0.05;
+      stats.criticalChance += 0.02;
     },
   },
   PICKAXE: {
@@ -522,7 +688,7 @@ export const DUNGEON_POINTS = {
 };
 
 export interface Card {
-  type: "Común" | "Rara" | "Épica" | "Legendaria";
+  type: "Common" | "Rare" | "Epic" | "Legendary";
   name: string;
   color: string;
   bonus: unknown;
@@ -533,58 +699,58 @@ export interface Card {
 const CARD_POOL: Card[] = [
   // --- COMUNES (Blancas) ---
   {
-    name: "Crit +0.05",
-    type: "Común",
+    name: "+2% Critical Chance",
+    type: "Common",
     color: "#ffffff",
-    bonus: { crit: 0.05 },
+    bonus: { crit: 0.02 },
     icon: "crit",
   },
   {
-    name: "Defense +1",
-    type: "Común",
+    name: "+1 Defense",
+    type: "Common",
     color: "#ffffff",
     bonus: { defense: 1 },
     icon: "defense",
   },
   {
-    name: "Attack +1",
-    type: "Común",
+    name: "+1 Attack",
+    type: "Common",
     color: "#ffffff",
     bonus: { attack: 1 },
     icon: "attack",
   },
   {
-    name: "+5 energy",
-    type: "Común",
+    name: "+5 Energy",
+    type: "Common",
     color: "#ffffff",
     bonus: { energy: 5 },
     icon: "lightning",
   },
   {
-    name: "+10 energy",
-    type: "Común",
+    name: "+10 Energy",
+    type: "Common",
     color: "#ffffff",
     bonus: { energy: 10 },
     icon: "lightning",
   },
   {
-    name: "+1 pickaxe",
-    type: "Común",
+    name: "+1 Pickaxe",
+    type: "Common",
     color: "#ffffff",
     bonus: { pickaxe: 1 },
     icon: "pickaxe",
   },
   {
-    name: "+5 max energy",
-    type: "Rara",
-    color: "#4592e5",
+    name: "+5 Max Energy",
+    type: "Common",
+    color: "#ffffff",
     bonus: { maxEnergy: 5 },
     icon: "lightning",
   },
   {
-    name: "+10 max energy",
-    type: "Rara",
-    color: "#4592e5",
+    name: "+10 Max Energy",
+    type: "Common",
+    color: "#ffffff",
     bonus: { maxEnergy: 10 },
     icon: "lightning",
   },
@@ -592,42 +758,42 @@ const CARD_POOL: Card[] = [
   // --- RARAS (Azules) ---
   {
     name: "+2 Attack",
-    type: "Rara",
+    type: "Rare",
     color: "#4592e5",
     bonus: { attack: 2 },
     icon: "attack",
   },
   {
-    name: "+15 max energy",
-    type: "Rara",
+    name: "+15 Max Energy",
+    type: "Rare",
     color: "#4592e5",
     bonus: { maxEnergy: 15 },
     icon: "lightning",
   },
   {
-    name: "+20 max energy",
-    type: "Rara",
+    name: "+20 Max Energy",
+    type: "Rare",
     color: "#4592e5",
     bonus: { maxEnergy: 20 },
     icon: "lightning",
   },
   {
-    name: "+0.1 Crit",
-    type: "Rara",
+    name: "+5% Critical Chance",
+    type: "Rare",
     color: "#4592e5",
-    bonus: { crit: 0.1 },
+    bonus: { crit: 0.05 },
     icon: "crit",
   },
   {
-    name: "Defense +2",
-    type: "Rara",
+    name: "+2 Defense",
+    type: "Rare",
     color: "#4592e5",
     bonus: { defense: 2 },
     icon: "defense",
   },
   {
-    name: "+2 pickaxe",
-    type: "Rara",
+    name: "+2 Pickaxe",
+    type: "Rare",
     color: "#4592e5",
     bonus: { pickaxe: 2 },
     icon: "pickaxe",
@@ -636,72 +802,72 @@ const CARD_POOL: Card[] = [
   // --- ÉPICAS (Moradas) ---
   {
     name: "+3 Attack",
-    type: "Épica",
+    type: "Epic",
     color: "#b145e5",
     bonus: { attack: 3 },
     icon: "attack",
   },
   {
-    name: "+3 pickaxe",
-    type: "Épica",
+    name: "+3 Pickaxe",
+    type: "Epic",
     color: "#b145e5",
     bonus: { pickaxe: 3 },
     icon: "pickaxe",
   },
   {
-    name: "+25 max energy",
-    type: "Épica",
+    name: "+25 Max Energy",
+    type: "Epic",
     color: "#b145e5",
     bonus: { maxEnergy: 25 },
     icon: "lightning",
   },
   {
-    name: "+3 defense",
-    type: "Épica",
+    name: "+3 Defense",
+    type: "Epic",
     color: "#b145e5",
     bonus: { defense: 3 },
     icon: "defense",
   },
   {
-    name: "+0.15 Crit",
-    type: "Épica",
+    name: "+10% Critical Chance",
+    type: "Epic",
     color: "#b145e5",
-    bonus: { crit: 0.15 },
+    bonus: { crit: 0.1 },
     icon: "crit",
   },
 
   // --- LEGENDARIAS (Naranjas/Doradas) ---
   {
     name: "+5 Attack",
-    type: "Legendaria",
+    type: "Legendary",
     color: "#ff8c00",
     bonus: { attack: 5 },
     icon: "attack",
   },
   {
-    name: "+5 defense",
-    type: "Legendaria",
+    name: "+5 Defense",
+    type: "Legendary",
     color: "#ff8c00",
     bonus: { defense: 5 },
     icon: "defense",
   },
   {
-    name: "+0.25 Crit",
-    type: "Legendaria",
+    name: "+15% Critical Chance",
+    type: "Legendary",
     color: "#ff8c00",
-    bonus: { crit: 0.25 },
+    bonus: { crit: 0.15 },
     icon: "crit",
   },
   {
-    name: "+50 max energy",
-    type: "Legendaria",
+    name: "+50 Max Energy",
+    type: "Legendary",
     color: "#ff8c00",
     bonus: { maxEnergy: 50 },
     icon: "lightning",
   },
   {
-    name: "+10 pickaxe",
-    type: "Legendaria",
+    name: "+10 Pickaxe",
+    type: "Legendary",
     color: "#ff8c00",
     bonus: { pickaxe: 10 },
     icon: "pickaxe",
@@ -714,12 +880,12 @@ export const getRandomCard = (): Card => {
 
   // Lógica de probabilidad (Roguelike)
   if (rand < 3)
-    rarity = "Legendaria"; // 3%
+    rarity = "Legendary"; // 3%
   else if (rand < 15)
-    rarity = "Épica"; // 12%
+    rarity = "Epic"; // 12%
   else if (rand < 40)
-    rarity = "Rara"; // 25%
-  else rarity = "Común"; // 60%
+    rarity = "Rare"; // 25%
+  else rarity = "Common"; // 60%
 
   // Filtramos el pool por la rareza obtenida
   const possibleCards = CARD_POOL.filter((c) => c.type === rarity);
@@ -745,15 +911,15 @@ export const INSTRUCTIONS: {
   width?: number;
 }[] = [
   {
-    image: "world/DeepDungeonAssets/lightning.png",
+    image: "world/DeepDungeonAssets/map_2.webp",
     description: translate("deepdungeon.instructions1"),
   },
   {
-    image: "world/DeepDungeonAssets/pickaxe.png",
+    image: "world/DeepDungeonAssets/lightning.png",
     description: translate("deepdungeon.instructions2"),
   },
   {
-    image: "world/DeepDungeonAssets/heart.png",
+    image: "world/DeepDungeonAssets/pirate_bounty.webp",
     description: translate("deepdungeon.instructions3"),
   },
   {
@@ -761,11 +927,53 @@ export const INSTRUCTIONS: {
     description: translate("deepdungeon.instructions4"),
   },
   {
-    image: "world/DeepDungeonAssets/shield.png",
+    image: "world/DeepDungeonAssets/pickaxe.png",
     description: translate("deepdungeon.instructions5"),
   },
   {
-    image: "world/DeepDungeonAssets/crit.png",
+    image: "world/DeepDungeonAssets/Stairs.png",
     description: translate("deepdungeon.instructions6"),
+  },
+];
+export const POINTS: {
+  image: string;
+  description: string;
+  width?: number;
+}[] = [
+  {
+    image: "world/DeepDungeonAssets/pink_crystal_3.png",
+    description: translate("deepdungeon.points1"),
+  },
+  {
+    image: "world/DeepDungeonAssets/white_crystal_1.png",
+    description: translate("deepdungeon.points2"),
+  },
+  {
+    image: "world/DeepDungeonAssets/blue_crystal_4.png",
+    description: translate("deepdungeon.points3"),
+  },
+  {
+    image: "world/DeepDungeonAssets/prismora_crystal_5.png",
+    description: translate("deepdungeon.points4"),
+  },
+  {
+    image: "world/DeepDungeonAssets/skeleton.png",
+    description: translate("deepdungeon.points5"),
+  },
+  {
+    image: "world/DeepDungeonAssets/knight.png",
+    description: translate("deepdungeon.points6"),
+  },
+  {
+    image: "world/DeepDungeonAssets/frankenstein.png",
+    description: translate("deepdungeon.points7"),
+  },
+  {
+    image: "world/DeepDungeonAssets/devil.png",
+    description: translate("deepdungeon.points8"),
+  },
+  {
+    image: "world/DeepDungeonAssets/Stairs.png",
+    description: translate("deepdungeon.points9"),
   },
 ];

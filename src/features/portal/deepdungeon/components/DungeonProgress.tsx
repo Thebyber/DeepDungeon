@@ -5,7 +5,7 @@ import { InnerPanel } from "components/ui/Panel";
 import { Label } from "components/ui/Label";
 import { SUNNYSIDE } from "assets/sunnyside";
 import { ENEMY_TYPES, EnemyType } from "../lib/Enemies";
-import { LEVEL_DESIGNS } from "../DeepDungeonConstants";
+import { LEVEL_DESIGNS, DUNGEON_POINTS } from "../DeepDungeonConstants";
 
 // --- 1. Definimos el Slot visual aquí mismo para evitar el error de ReferenceError ---
 const DungeonItemSlot: React.FC<{
@@ -19,6 +19,18 @@ const DungeonItemSlot: React.FC<{
   crit?: number;
   damageAoE?: number;
 }> = ({ name, current, total, image, hp, atk, def, crit, damageAoE }) => {
+  // 1. Buscamos si el nombre existe en CRYSTALS
+  const crystalPoints =
+    DUNGEON_POINTS.CRYSTALS[name as keyof typeof DUNGEON_POINTS.CRYSTALS];
+
+  // 2. Buscamos si el nombre existe en ENEMIES (lo ponemos en mayúsculas por si acaso)
+  const enemyPoints =
+    DUNGEON_POINTS.ENEMIES[
+      name.toUpperCase() as keyof typeof DUNGEON_POINTS.ENEMIES
+    ];
+
+  // 3. Determinamos el valor final a mostrar
+  const points = crystalPoints || enemyPoints || 0;
   const isComplete = current >= total;
 
   return (
@@ -97,6 +109,12 @@ const DungeonItemSlot: React.FC<{
         )}
       </div>
 
+      {/* MOSTRAR LOS PUNTOS SI EXISTEN */}
+      {points > 0 && (
+        <div className="text-[8px] font-pixel text-green-700 mb-1">
+          {`${points} Points`}
+        </div>
+      )}
       {/* 4. PROGRESO AL FINAL */}
       <div className="flex items-center gap-1 mt-auto w-full justify-center bg-brown-200/40 rounded-sm py-1">
         <span

@@ -13,8 +13,8 @@ import { PortalMachineState } from "../../lib/portalMachine";
 import { SUNNYSIDE } from "assets/sunnyside";
 import { PIXEL_SCALE } from "features/game/lib/constants";
 import { SquareIcon } from "components/ui/SquareIcon";
-import codex from "assets/icons/codex.webp";
-import { DeepDungeonGuide } from "./DeepDungeonGuide";
+import key from "public/world/DeepDungeonAssets/key.png";
+import { Controls } from "./DeepDungeonControls";
 
 interface Props {
   mode: "introduction" | "success" | "failed";
@@ -46,7 +46,7 @@ export const DeepDungeonMission: React.FC<Props> = ({
 
   const dateKey = getDateKey();
 
-  const [currentPage, setCurrentPage] = useState<"main" | "guide">("main");
+  const [currentPage, setCurrentPage] = useState<"main" | "controls">("main");
 
   return (
     <>
@@ -107,11 +107,12 @@ export const DeepDungeonMission: React.FC<Props> = ({
                 <Button
                   className="whitespace-nowrap capitalize"
                   onClick={() => {
-                    setCurrentPage("guide");
+                    setCurrentPage("controls");
                   }}
                 >
                   <div className="flex flex-row items-center gap-1">
-                    <SquareIcon icon={codex} width={8} />
+                    <SquareIcon icon={key} width={8} />
+                    {t(`deepdungeon.controls`)}
                   </div>
                 </Button>
               </div>
@@ -135,8 +136,8 @@ export const DeepDungeonMission: React.FC<Props> = ({
           </div>
         </>
       )}
-      {currentPage === "guide" && (
-        <DeepDungeonGuide onBack={() => setCurrentPage("main")} />
+      {currentPage === "controls" && (
+        <Controls onBack={() => setCurrentPage("main")} />
       )}
     </>
   );

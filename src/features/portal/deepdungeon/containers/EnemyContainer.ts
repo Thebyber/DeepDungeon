@@ -297,44 +297,23 @@ export class EnemyContainer extends Phaser.GameObjects.Container {
   }
   // El enemigo recibe daño
   // 1. FUNCIÓN DE DAÑO UNIFICADA
-  public takeDamage(trapDamage?: number) {
-    // 1. SI ES INVULNERABLE O YA MURIÓ, SALIMOS
-    if (this.currentHp <= 0 || this.isInvulnerable) return;
+  public takeDamage(amount: number, isCritical: boolean = false) {
+    if (this.isDead || this.isInvulnerable) return;
 
-    let finalDamage: number = 0;
-    let isCritical = false;
+    // 1. Restar vida
+    this.currentHp = Math.max(0, this.currentHp - amount);
+    this.isInvulnerable = true;
 
-    // Accedemos a las stats reales desde la máquina
-    const stats = this.scene.portalService?.state.context.stats;
-
-    if (trapDamage !== undefined) {
-      finalDamage = trapDamage;
-    } else if (stats) {
-      const roll = Math.random();
-      isCritical = roll < (stats.criticalChance || 0.05);
-      const multiplier = isCritical ? 2 : 1;
-
-      const pAttack = Number(stats.attack) || 1;
-      const eDefense = Number(this.stats.defense) || 0;
-
-      finalDamage = pAttack * multiplier - eDefense;
-      if (finalDamage < 1 || isNaN(finalDamage)) finalDamage = 1;
-    }
-
-    // 2. APLICAR DAÑO E INICIAR INVULNERABILIDAD
-    this.currentHp -= finalDamage;
-    this.isInvulnerable = true; // Activamos el escudo
+    // 2. Actualizar barra visual
     this.updateHealthBar(isCritical);
 
-    //console.log(`[COMBATE] Daño: ${finalDamage} | HP: ${this.currentHp}`);
-
     if (this.currentHp <= 0) {
-      this.currentHp = 0;
       this.die();
     } else {
-      // Feedback visual de golpe (se mantiene igual)
+      // 3. Efecto visual de golpe
       this.spriteBody.setTint(isCritical ? 0xffff00 : 0xff0000);
       this.playAnimationEnemies("hurt");
+
       this.scene.time.delayedCall(500, () => {
         if (this.active) {
           this.isInvulnerable = false;
@@ -407,7 +386,7 @@ export class EnemyContainer extends Phaser.GameObjects.Container {
 
     this.spriteBody.clearTint();
     this.playAnimationEnemies("dead");
-
+    this.addSound("dead_enemies").play();
     // 6. LIMPIEZA DE LISTAS EN LA ESCENA
     this.scene.time.delayedCall(100, () => {
       if (this.scene.enemies) {
@@ -426,30 +405,36 @@ export class EnemyContainer extends Phaser.GameObjects.Container {
   }
   // El enemigo te ataca
   public attackPlayer() {
-    if (this.isMoving || !this.player || this.currentHp <= 0) return;
+    if (this.isMoving || !this.player || this.isDead) return;
 
     this.isMoving = true;
     this.setDepth(150);
     this.playAnimationEnemies("attack");
-    const name = this.enemyType.toLowerCase(); // "skeleton"
-    const EnemyAttackSound = `${name}_attack`;
-    this.addSound(EnemyAttackSound).play();
-    this.scene.time.delayedCall(1000, () => {
-      if (!this.active || this.currentHp <= 0) return;
 
-      // --- CAMBIO AQUÍ: Calculamos el daño con defensa ---
-      const damageToApply = this.calculateDamageToPlayer(this.stats.damage);
-      // --- USAR PORTAL SERVICE PARA RECIBIR DAÑO ---
-      this.scene.portalService?.send("HIT_TRAP", { damage: damageToApply });
+    const name = this.enemyType.toLowerCase();
+    this.addSound(`${name}_attack`).play();
 
-      const player = this.player as unknown as IPlayerContainer;
-      if (player && player.playAnimationEnemies) {
-        player.playAnimationEnemies("hurt");
-      }
+    // IMPACTO: A los 500ms (ajusta según el frame de tu animación de golpe)
+    this.scene.time.delayedCall(50, () => {
+      if (
+        !this ||
+        !this.active ||
+        this.isDead ||
+        !this.spriteBody ||
+        !this.scene
+      )
+        return;
+
+      // LLAMADA AL ÁRBITRO: Pasamos el daño base, la escena aplica críticos y tu defensa
+      (this.scene as any).handlePlayerDamage(
+        this.stats.damage,
+        this.stats.criticalChance,
+      );
     });
 
+    // RECUPERACIÓN: El enemigo vuelve a estar listo tras 1 segundo
     this.scene.time.delayedCall(1000, () => {
-      if (this.active && this.currentHp > 0) {
+      if (this.active && !this.isDead) {
         this.setDepth(50);
         this.isMoving = false;
         this.playAnimationEnemies("idle");
@@ -458,39 +443,48 @@ export class EnemyContainer extends Phaser.GameObjects.Container {
   }
 
   public attackAoEPlayer() {
-    // 1. Añadimos un chequeo de HP y estado para evitar re-entrada
-    if (this.isMoving || !this.player || this.currentHp <= 0) return;
+    if (this.isMoving || !this.player || this.isDead) return;
 
     this.isMoving = true;
     this.setDepth(150);
     this.playAnimationEnemies("attackAoE");
 
     const name = this.enemyType.toLowerCase();
-    const EnemyAttackSoundAoE = `${name}_attackAoE`;
-    this.addSound(EnemyAttackSoundAoE).play();
+    this.addSound(`${name}_attackAoE`).play();
 
-    // 2. EL DAÑO: Se ejecuta a los 1000ms (impacto visual)
+    // IMPACTO AOE
     this.scene.time.delayedCall(50, () => {
-      if (!this.active || this.currentHp <= 0) return;
+      if (
+        !this ||
+        !this.active ||
+        this.isDead ||
+        !this.spriteBody ||
+        !this.scene
+      )
+        return;
+      // Si el objeto ya no es válido o ha sido destruido, salimos inmediatamente
 
-      const damageToApplyAoE = this.calculateDamageToPlayer(
+      // 1. Aplicamos el daño
+      (this.scene as any).handlePlayerDamage(
         this.stats.damageAoE,
+        this.stats.criticalChance,
       );
-      this.scene.portalService?.send("HIT_TRAP", { damage: damageToApplyAoE });
 
-      // Solo llamar a hurt() si el jugador no está ya en ese estado
-      const player = this.player as unknown as IPlayerContainer;
-      if (player && typeof player.hurt === "function") {
-        player.hurt();
+      // 2. COMPROBACIÓN CRÍTICA:
+      // Solo llamar a hurt() si el jugador NO ha muerto tras el daño anterior
+      const player = this.player as any; // Usamos any para acceder a isDead
+
+      if (player && !player.isDead) {
+        if (typeof player.hurt === "function") {
+          player.hurt();
+        }
       }
     });
 
-    // 3. LA RECUPERACIÓN: Le damos un poco más de tiempo (1200ms)
-    // para que la animación termine y el jugador pueda reaccionar
-    this.scene.time.delayedCall(1100, () => {
-      if (this.active && this.currentHp > 0) {
+    this.scene.time.delayedCall(1000, () => {
+      if (this.active && !this.isDead) {
         this.setDepth(50);
-        this.isMoving = false; // Aquí permitimos que el enemigo vuelva a pensar
+        this.isMoving = false;
         this.playAnimationEnemies("idle");
       }
     });
@@ -544,12 +538,16 @@ export class EnemyContainer extends Phaser.GameObjects.Container {
   private calculateDamageToPlayer(rawDamage: number): number {
     const stats = this.scene.portalService?.state.context.stats;
     const playerDefense = stats?.defense || 0;
-    const finalDamage = rawDamage - playerDefense;
 
-    //console.log(`--- 🛡️ JUGADOR RECIBE GOLPE ---`);
-    //console.log(`> Daño Base Enemigo: ${rawDamage}`);
-    //console.log(`> Tu Defensa: ${playerDefense}`);
-    //console.log(`> Energía restada: ${finalDamage}`);
+    // 1. Calcular si es crítico
+    const isCritical = Math.random() < (this.stats.criticalChance || 0);
+
+    // 2. Calculamos el ataque bruto (bruto = ataque base o ataque x 2 si es crítico)
+    const rawAttack = isCritical ? rawDamage * 2 : rawDamage;
+
+    // 3. Restamos la defensa al ataque ya potenciado
+    // Esto hace que el crítico sea mucho más valioso contra enemigos acorazados
+    const finalDamage = Math.max(1, rawAttack - playerDefense);
     return Math.max(1, finalDamage);
   }
   public takeTrapDamage(amount: number) {

@@ -76,6 +76,13 @@ export const DeepDungeonPhaser: React.FC = () => {
       game.current?.destroy(true);
     };
   }, []);
+  /*Para ver el estado actual de la maquina
+  useEffect(() => {
+  console.log("🕹️ ESTADO ACTUAL DE LA MÁQUINA:", portalState.value);
+  
+  // Si quieres ver TODO el contexto (energía, nivel, etc.)
+  console.log("📊 Datos actuales (Context):", portalState.context);
+}, [portalState.value]);*/
 
   const ref = useRef<HTMLDivElement>(null);
 

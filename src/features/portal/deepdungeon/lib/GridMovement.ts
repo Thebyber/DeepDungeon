@@ -26,6 +26,8 @@ export class GridMovement {
   private currentPlayer: BumpkinContainer;
   private tileSize: number;
   private isMoving = false;
+  private frozen = false;
+  private wasKeyDown = false;
   private layers: Record<string, Phaser.Tilemaps.TilemapLayer>;
   private readonly OFFSET_X = 8;
   private readonly OFFSET_Y = 4;
@@ -43,8 +45,14 @@ export class GridMovement {
     this.layers = layers;
   }
 
+  public setFrozen(value: boolean) {
+    this.frozen = value;
+  }
+
   public handleInput(cursors: Record<string, { isDown: boolean } | undefined>) {
+    // 1. Bloqueos de seguridad existentes
     if (
+      this.frozen ||
       this.isMoving ||
       !this.currentPlayer ||
       this.currentPlayer.isDead ||
@@ -52,21 +60,37 @@ export class GridMovement {
     )
       return;
 
-    let dx = 0;
-    let dy = 0;
+    // 2. Detectar si alguna tecla de movimiento está siendo presionada
+    const isLeftDown = cursors.left?.isDown || cursors.a?.isDown;
+    const isRightDown = cursors.right?.isDown || cursors.d?.isDown;
+    const isUpDown = cursors.up?.isDown || cursors.w?.isDown;
+    const isDownDown = cursors.down?.isDown || cursors.s?.isDown;
 
-    if (cursors.left?.isDown || cursors.a?.isDown) dx = -this.tileSize;
-    else if (cursors.right?.isDown || cursors.d?.isDown) dx = this.tileSize;
-    else if (cursors.up?.isDown || cursors.w?.isDown) dy = -this.tileSize;
-    else if (cursors.down?.isDown || cursors.s?.isDown) dy = this.tileSize;
+    const isAnyKeyDown = isLeftDown || isRightDown || isUpDown || isDownDown;
 
-    if (dx !== 0 || dy !== 0) {
-      this.move(dx, dy);
+    // 3. LA CLAVE: Solo actuar si hay una tecla pulsada Y en el frame anterior NO había ninguna
+    if (isAnyKeyDown && !this.wasKeyDown) {
+      let dx = 0;
+      let dy = 0;
+
+      if (isLeftDown) dx = -this.tileSize;
+      else if (isRightDown) dx = this.tileSize;
+      else if (isUpDown) dy = -this.tileSize;
+      else if (isDownDown) dy = this.tileSize;
+
+      if (dx !== 0 || dy !== 0) {
+        this.move(dx, dy);
+      }
     }
+
+    // 4. Actualizar el estado para el siguiente frame
+    this.wasKeyDown = isAnyKeyDown;
   }
 
   private move(dx: number, dy: number) {
     // --- NUEVO: Acceso al servicio mediante la escena ---
+    if (this.isMoving || this.frozen) return;
+    if ((this.currentPlayer as any).isDead) return;
     const scene = this.scene as DeepDungeonScene;
     const service = scene.portalService;
     const stats = service?.state.context.stats;
@@ -149,13 +173,19 @@ export class GridMovement {
         return;
       }
       player.attack();
-
       // --- NUEVO CÁLCULO DE DAÑO ---
       // Obtenemos las stats del enemigo (que deberían incluir 'defense')
       const enemyStats = (targetEnemy as any).stats || { defense: 0 };
 
-      // Fórmula simple: Daño = Ataque - Defensa (mínimo 1 de daño para que no sea 0)
-      const finalDamage = Math.max(1, stats.attack - (enemyStats.defense || 0));
+      // 1. Calcular si es crítico
+      const isCritical = Math.random() < (stats.criticalChance || 0);
+
+      // 2. Calculamos el ataque bruto (bruto = ataque base o ataque x 2 si es crítico)
+      const rawAttack = isCritical ? stats.attack * 2 : stats.attack;
+
+      // 3. Restamos la defensa al ataque ya potenciado
+      // Esto hace que el crítico sea mucho más valioso contra enemigos acorazados
+      const finalDamage = Math.max(1, rawAttack - (enemyStats.defense || 0));
 
       // Aplicamos el daño calculado
       targetEnemy.takeDamage(finalDamage);
@@ -178,9 +208,11 @@ export class GridMovement {
 
     // 5. SI PASA TODO, MOVER
     this.isMoving = true;
-    service?.send("UPDATE_STATS", {
-      stats: { energy: stats.energy - 1 },
-    });
+
+    // ✅ Llamamos a la escena: Ella resta 1, mira tu defensa (si aplica)
+    // y decide si mueres o no.
+    (this.scene as any).handlePlayerDamage(1);
+    if (this.currentPlayer.isDead) return;
     if (isWater) {
       //console.log("estoy en el agua");
       this.currentPlayer.swimming(); // Activa animación de nadar
@@ -205,6 +237,10 @@ export class GridMovement {
           (this.scene as SceneWithEnemies).packetSentAt = 0;
         }
         this.scene.events.emit("PLAYER_MOVED");
+      },
+      // ESTA ES LA CLAVE: Si el tween se detiene por un golpe o interrupción
+      onStop: () => {
+        this.isMoving = false;
       },
     });
   }

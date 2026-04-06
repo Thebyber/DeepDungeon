@@ -30,6 +30,7 @@ export const getJwt = () => {
 export interface Context {
   id: number;
   jwt: string | null;
+  isJoystickActive: boolean;
   state: GameState | undefined;
   stats: PlayerStats;
   codex: {
@@ -50,8 +51,13 @@ export interface Context {
   attemptsRemaining: number;
   lastScore: number;
 }
+type SetJoystickActiveEvent = {
+  type: "SET_JOYSTICK_ACTIVE";
+  isJoystickActive: boolean;
+};
 
 export type DungeonEvent =
+  | SetJoystickActiveEvent
   | { type: "START" }
   | { type: "CANCEL_PURCHASE" }
   | { type: "PURCHASED_RESTOCK" }
@@ -147,6 +153,7 @@ export const portalMachine = createMachine<Context, DungeonEvent, PortalState>({
   context: {
     id: 0,
     jwt: getJwt(),
+    isJoystickActive: false,
     state: CONFIG.API_URL ? undefined : OFFLINE_FARM,
     stats: {
       energy: 100,
@@ -174,6 +181,15 @@ export const portalMachine = createMachine<Context, DungeonEvent, PortalState>({
     score: 0,
     attemptsRemaining: 0,
     lastScore: 0,
+  },
+  on: {
+    SET_JOYSTICK_ACTIVE: {
+      actions: assign({
+        isJoystickActive: (_: Context, event: SetJoystickActiveEvent) => {
+          return event.isJoystickActive;
+        },
+      }),
+    },
   },
   states: {
     initialising: {
@@ -342,22 +358,12 @@ export const portalMachine = createMachine<Context, DungeonEvent, PortalState>({
         },
         HIT_TRAP: [
           {
-            target: "loser",
-            cond: (context) => context.stats.energy - 10 <= 0, // Simplifica para probar
-            actions: assign({
-              stats: (context) => ({
-                ...context.stats,
-                energy: 0,
-              }),
-            }),
-          },
-          {
             actions: assign({
               stats: (context, event: any) => {
-                const damage = event.damage ?? 10;
+                const damage = event.damage ?? 1;
                 return {
-                  ...context.stats, // <--- CLAVE: Copia el objeto anterior
-                  energy: Math.max(0, context.stats.energy - damage), // <--- CLAVE: Crea la nueva referencia
+                  ...context.stats,
+                  energy: Math.max(0, context.stats.energy - damage),
                 };
               },
             }),
@@ -682,23 +688,6 @@ export const portalMachine = createMachine<Context, DungeonEvent, PortalState>({
         },
         {
           target: "loser",
-          actions: assign({
-            // Resetamos las stats al valor inicial
-            stats: {
-              energy: 100,
-              maxEnergy: 100,
-              currentLevel: 1,
-              inventory: { pickaxe: 1 },
-              attack: 1,
-              defense: 1,
-              criticalChance: 0.1,
-            },
-            levelProgress: { enemies: {}, crystals: {} },
-            dungeonPoints: 0,
-            score: 0,
-            rerollCost: 100,
-            startedAt: 0,
-          }) as any,
         },
       ],
     },

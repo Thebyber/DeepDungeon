@@ -20,7 +20,7 @@ export class CrystalContainer extends Phaser.GameObjects.Container {
     const sprite = scene.add.sprite(0, 0, spriteKey);
     sprite.setOrigin(0.5, 0.5);
     this.add(sprite);
-
+    this.setDepth(2);
     this.scene.add.existing(this);
     this.scene.physics.add.existing(this);
 

@@ -18,6 +18,7 @@ import { SquareIcon } from "components/ui/SquareIcon";
 import { DungeonProgress } from "../components/DungeonProgress";
 import { DungeonDrops } from "../components/DungeonDrops";
 import codexIcon from "assets/icons/codex.webp";
+import chores from "assets/icons/chores.webp";
 import { DungeonInventory } from "../components/DungeonInventory";
 import { ITEM_DETAILS } from "features/game/types/images";
 import { CardSelectionHUD } from "./CardSelectionHUD";
@@ -25,6 +26,7 @@ import Decimal from "decimal.js-light";
 import { Box } from "components/ui/Box";
 import pickaxeIcon from "./assets/pickaxe.png";
 import { PortalMachineState } from "../lib/portalMachine";
+import { DeepDungeonGuide } from "./panels/DeepDungeonGuide";
 // Registramos las 20 variantes (4 colores x 5 formas)
 const colors = ["rosa", "blanco", "azul", "mixto"];
 colors.forEach((color) => {
@@ -43,9 +45,9 @@ export const DeepDungeonHUD: React.FC = () => {
   const [portalState] = useActor(portalService);
   const [showInventory, setShowInventory] = useState(false);
   const [showCodex, setShowCodex] = useState(false);
-  const [activeTab, setActiveTab] = useState<"Enemies" | "Crystals" | "Drops">(
-    "Enemies",
-  );
+  const [activeTab, setActiveTab] = useState<
+    "Enemies" | "Crystals" | "Drops" | "Guide"
+  >("Enemies");
   const isPlaying = useSelector(portalService, _isPlaying);
 
   // Extraemos stats para los picos
@@ -227,6 +229,15 @@ export const DeepDungeonHUD: React.FC = () => {
               >
                 <SquareIcon icon={SUNNYSIDE.icons.treasure} width={9} />
               </OuterPanel>
+              <OuterPanel
+                className="p-1 cursor-pointer"
+                onClick={() => setActiveTab("Guide")}
+                style={{
+                  background: activeTab === "Guide" ? "#ead4aa" : undefined,
+                }}
+              >
+                <SquareIcon icon={chores} width={9} />
+              </OuterPanel>
             </div>
             <div className="flex-1 overflow-y-auto flex flex-col rounded-md p-1 ml-1">
               {activeTab === "Enemies" && (
@@ -237,6 +248,7 @@ export const DeepDungeonHUD: React.FC = () => {
               )}
               {activeTab === "Drops" && <DungeonDrops />}
             </div>
+            {activeTab === "Guide" && <DeepDungeonGuide />}
           </div>
         </OuterPanel>
       </Modal>

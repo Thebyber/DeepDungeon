@@ -131,7 +131,7 @@ export const DeepDungeon: React.FC = () => {
             mode={"failed"}
             showScore={true}
             showExitButton={true}
-            confirmButtonText={""}
+            confirmButtonText={t("play.again")}
             onConfirm={() => portalService.send("RETRY")}
           />
         </Modal>
@@ -155,7 +155,7 @@ export const DeepDungeon: React.FC = () => {
             mode={"introduction"}
             showScore={true}
             showExitButton={true}
-            confirmButtonText={""}
+            confirmButtonText={t("play.again")}
             onConfirm={() => portalService.send("RETRY")}
           />
         </Modal>

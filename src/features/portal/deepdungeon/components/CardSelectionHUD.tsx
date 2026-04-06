@@ -44,20 +44,20 @@ export const CardSelectionHUD: React.FC = () => {
 
   // Función para calcular el brillo según la rareza
   const getCardGlow = (card: Card) => {
-    if (card.type === "Legendaria") return `0 0 20px ${card.color}`;
-    if (card.type === "Épica") return `0 0 20px ${card.color}`;
-    if (card.type === "Rara") return `0 0 20px ${card.color}`;
+    if (card.type === "Legendary") return `0 0 20px ${card.color}`;
+    if (card.type === "Epic") return `0 0 20px ${card.color}`;
+    if (card.type === "Rare") return `0 0 20px ${card.color}`;
     return "none"; // Las comunes no brillan
   };
 
   // --- NUEVA FUNCIÓN PARA EL COLOR DE FONDO ---
   const getCardBackground = (type: string) => {
     switch (type) {
-      case "Rara":
+      case "Rare":
         return "#6985ff"; // Azul suave
-      case "Épica":
+      case "Epic":
         return "#ca67ff"; // Morado suave
-      case "Legendaria":
+      case "Legendary":
         return "#fce46b"; // Dorado suave
       default:
         return "#c7c7c7"; // Tu color original (Común)
@@ -68,7 +68,7 @@ export const CardSelectionHUD: React.FC = () => {
     <Modal show={true}>
       <OuterPanel className="bg-[#ead4aa] p-3 text-center">
         <Label type="formula" className="mb-4 uppercase tracking-wide">
-          {`¡Mejora de Nivel!`}
+          {`Choose one of the three benefits!`}
         </Label>
 
         <div className="flex gap-3 justify-center mb-5">
@@ -117,15 +117,21 @@ export const CardSelectionHUD: React.FC = () => {
                 className="w-9 my-2"
                 alt={card.icon}
               />
-
               <div className="text-[5px] font-pixel text-brown-800 bg-black/5 w-full py-1 rounded mt-auto">
                 {Object.entries(card.bonus as Record<string, number>).map(
-                  ([key, val]) => (
-                    <p key={key} className="leading-tight">
-                      {`+`}
-                      {val} {key}
-                    </p>
-                  ),
+                  ([key, val]) => {
+                    // Definimos qué llaves queremos que se muestren como porcentaje
+                    const isPercentage =
+                      key === "crit" || key === "criticalChance";
+
+                    return (
+                      <p key={key} className="leading-tight">
+                        {`+`}
+                        {/* Si es porcentaje, multiplicamos por 100 y añadimos %, si no, mostramos val normal */}
+                        {isPercentage ? `${val * 100}%` : val} {key}
+                      </p>
+                    );
+                  },
                 )}
               </div>
             </OuterPanel>
@@ -147,7 +153,7 @@ export const CardSelectionHUD: React.FC = () => {
           </Button>
 
           <p className="font-pixel text-[8px] text-brown-700">
-            {`Tus puntos:`}{" "}
+            {`Your points:`}{" "}
             <span className="text-brown-900 font-bold">{dungeonPoints}</span>
           </p>
         </InnerPanel>

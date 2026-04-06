@@ -94,7 +94,11 @@ export class DeepDungeonScene extends BaseScene {
     });
   }
   init(data: { level?: number }) {
-    this.currentLevel = data.level || 1;
+    if (data && data.level !== undefined) {
+      this.currentLevel = data.level;
+    } else {
+      this.currentLevel = 1;
+    }
     this.isTransitioning = false;
 
     // Ya no enviamos "UPDATE_STATS" aquí porque NEXT_MAP ya se encargó
@@ -104,10 +108,74 @@ export class DeepDungeonScene extends BaseScene {
       this.cache.tilemap.remove("deep-dungeon");
     }
   }
+
+  private restartGameScene = () => {
+    if (!this.scene.manager || this.sys.isActive() === false) return;
+    this.scene.restart({ level: 1 });
+  };
+
+  private onStart = (event: EventObject) => {
+    if (!this.sys || !this.sys.isActive() || !this.sys.displayList) return;
+    if (event.type === "START") {
+      this.initializeCreates();
+    }
+  };
+
+  private onRetry = (event: EventObject) => {
+    if (!this.sys || !this.sys.isActive() || !this.sys.displayList) return;
+    if (event.type === "RETRY") {
+      this.restartGameScene({ level: 1 });
+    }
+  };
+
+  private onContinue = (event: EventObject) => {
+    if (!this.sys || !this.sys.isActive() || !this.sys.displayList) return;
+    if (event.type === "CONTINUE") {
+      this.restartGameScene({ level: 1 });
+    }
+  };
+  private initialiseEvents() {
+    const portalService = this.portalService;
+    if (!portalService) return;
+
+    const mainEvents = [this.onStart, this.onRetry, this.onContinue];
+
+    const resetMainEvents = () => {
+      mainEvents.forEach((event) => {
+        portalService.off(event);
+      });
+    };
+
+    // Limpiar por si acaso
+    resetMainEvents();
+
+    // Registrar eventos
+    mainEvents.forEach((event) => {
+      portalService.onEvent(event);
+    });
+
+    // Limpiar al destruir escena
+    this.events.once("shutdown", resetMainEvents);
+    this.events.once("destroy", resetMainEvents);
+  }
+  private initializeCreates() {
+    // Reset de estado importante
+    this.isTransitioning = false;
+    this.occupiedTiles.clear();
+  }
+  private initialiseProperties() {
+    this.enemies = [];
+    this.traps = [];
+    this.crystals = [];
+    this.occupiedTiles.clear();
+    this.isTransitioning = false;
+  }
+
   preload() {
     // Usamos SIEMPRE la misma llave: "deep-dungeon"
     const mapKey = "deep-dungeon";
-    const mapPath = `world/DeepDungeonAssets/map${this.currentLevel}.json`;
+    const mapIndex = ((this.currentLevel - 1) % 10) + 1;
+    const mapPath = `world/DeepDungeonAssets/map${mapIndex}.json`;
 
     //console.log(`Cargando nivel ${this.currentLevel} desde ${mapPath}`);
 
@@ -141,6 +209,10 @@ export class DeepDungeonScene extends BaseScene {
       "/world/DeepDungeonAssets/sword_attack.mp3",
     );
     this.load.audio("swimming", "/world/DeepDungeonAssets/swimming.mp3");
+    this.load.audio(
+      "dead_bumpkin",
+      "/world/DeepDungeonAssets/dead_bumpkin.mp3",
+    );
     //Enemies sounds
     this.load.audio(
       "skeleton_attack",
@@ -166,11 +238,19 @@ export class DeepDungeonScene extends BaseScene {
       "devil_attackAoE",
       "/world/DeepDungeonAssets/devil_attackAoE.wav",
     );
+    this.load.audio(
+      "dead_enemies",
+      "/world/DeepDungeonAssets/dead_enemies.mp3",
+    );
+    //Trap sounds
+    this.load.audio("spikes_trap", "/world/DeepDungeonAssets/spikes_trap.mp3");
+
     //Crystal break sound
     this.load.audio(
       "mine_crystal",
       "/world/DeepDungeonAssets/mine_crystal.mp3",
     );
+    //Sounds for level up, card selection, win rewards, etc.
     this.load.audio("next_level", "/world/DeepDungeonAssets/next_level.mp3");
     this.load.audio("card_sound", "/world/DeepDungeonAssets/card_sound.mp3");
     this.load.audio(
@@ -425,7 +505,9 @@ export class DeepDungeonScene extends BaseScene {
   }
 
   async create() {
+    this.initialiseProperties();
     super.create();
+    this.initialiseEvents();
     this.occupiedTiles.clear(); // Limpiar al iniciar el nivel
     this.energyOrbsGroup = this.physics.add.group({
       classType: Phaser.Physics.Arcade.Sprite,
@@ -525,6 +607,293 @@ export class DeepDungeonScene extends BaseScene {
       this.portalService.send("UPDATE_STATS", { stats });
     }
   }
+
+  update() {
+    super.update();
+
+    if (!this.currentPlayer || !this.cursorKeys) return;
+    //if (this.currentPlayer.isDead) return;
+    // SEGURIDAD: Si el jugador no tiene ningún tween activo y no está muerto,
+    // pero GridMovement dice que se está moviendo, lo liberamos tras un pequeño margen.
+    if (
+      this.gridMovement &&
+      (this.gridMovement as any).isMoving &&
+      !this.tweens.isTweening(this.currentPlayer)
+    ) {
+      // Si han pasado más de 500ms y no hay movimiento real, desbloqueamos
+      (this.gridMovement as any).isMoving = false;
+    }
+    if (this.isPlaying) {
+      // 1. Usamos encadenamiento opcional (?.) para evitar el error de TS
+      const state = this.portalService?.state.value;
+      const stats = this.portalService?.state.context.stats;
+
+      // 2. Si no hay gridMovement, no seguimos
+      if (!this.gridMovement) return;
+
+      // 3. SEGURIDAD: Si estamos en juego y no nos movemos, reseteamos el flag
+      // Esto evita que te quedes "congelado" como en el vídeo
+      if (state === "playing" && !this.currentPlayer.isMoving) {
+        this.gridMovement.setFrozen(false);
+        // Si tienes acceso a isMoving dentro de GridMovement, podrías forzarlo:
+        // (this.gridMovement as any).isMoving = false;
+      }
+
+      // SEGURIDAD: Si no estamos en playing, congelamos. Si estamos, descongelamos.
+      if (state !== "playing") {
+        this.gridMovement?.setFrozen(true); // <--- Añade el ?
+        return;
+      } else {
+        this.gridMovement?.setFrozen(false); // <--- Añade el ?
+      }
+
+      // Si la energía cae a 0 o menos mientras caminamos, forzamos muerte
+      if (stats && stats.energy <= 0 && !this.currentPlayer.isDead) {
+        this.handlePlayerDeath();
+        return;
+      }
+
+      const body = this.currentPlayer.body as Phaser.Physics.Arcade.Body;
+      if (body) {
+        body.setVelocity(0, 0);
+      }
+
+      // --- 1. FILTRO DE ESTADO ---
+      // Si el jugador está atacando o sufriendo daño, BLOQUEAMOS el input.
+      // Esto evita que "atropelles" enemigos o que las animaciones se pisen.
+      const isBusy =
+        this.currentPlayer.isAttacking ||
+        this.currentPlayer.isHurting ||
+        this.currentPlayer.isMining;
+
+      if (!isBusy) {
+        // Solo permitimos movimiento y acciones si NO está ocupado
+        this.gridMovement?.handleInput(this.cursorKeys as any);
+        this.handlePlayerActions(); // Aquí es donde disparas el ataque
+      }
+
+      // --- 2. ANIMACIONES Y MÁSCARA ---
+      // Las animaciones deben seguir actualizándose (o el sistema de control de estas)
+      this.loadBumpkinAnimations();
+
+      if (this.darknessMask && this.visionCircle) {
+        const x = this.currentPlayer.x;
+        const y = this.currentPlayer.y;
+        this.darknessMask.erase(this.visionCircle, x, y);
+      }
+    }
+    if (this.isReady) {
+      this.portalService?.send("START");
+      this.lastAttempt = this.time.now;
+      this.currentPlayer.isDead = false;
+      this.currentPlayer.idle();
+      this.gridMovement?.setFrozen(false);
+    }
+  }
+  /*public handleDamage(amount: number) {
+    const stats = this.portalService?.state.context.stats;
+    const player = this.currentPlayer as any;
+
+    if (!stats || player.isDead) return;
+
+    // 1. Cálculo matemático real
+    const currentEnergy = stats.energy;
+    const finalEnergy = currentEnergy - amount;
+
+    // LOG de depuración para que veas qué pasa
+    console.log(
+      `🛡️ PHASER CHECK: Energía ${currentEnergy} - Daño ${amount} = ${finalEnergy}`,
+    );
+
+    // 2. SOLO MATAR SI ES 0 O MENOS
+    if (finalEnergy <= 0) {
+      console.log("💀 MUERTE CONFIRMADA POR PHASER");
+      player.isDead = true;
+
+      // Sincronizamos la máquina a 0
+      this.portalService?.send("UPDATE_STATS", { stats: { energy: 0 } });
+
+      // Ejecutamos la secuencia de muerte que ya tienes
+      this.handlePlayerDeath();
+    }
+    // 3. SI SOBREVIVE (aunque sea con 1 de vida)
+    else {
+      console.log("💪 SOBREVIVE. Actualizando vida en la máquina...");
+
+      // IMPORTANTE: Usamos UPDATE_STATS en lugar de HIT_TRAP si HIT_TRAP está dando errores
+      this.portalService?.send("UPDATE_STATS", {
+        stats: { energy: finalEnergy },
+      });
+
+      if (typeof player.hurt === "function") {
+        player.hurt();
+      }
+    }
+  }*/
+  // Nuevo método en la escena:
+  /*public handlePlayerDeath() {
+    // 1. PRIORIDAD: Usar un flag local para evitar que el error se repita en bucle
+    if (
+      this.isTransitioning ||
+      !this.currentPlayer ||
+      (this.currentPlayer as any).isDead
+    ) {
+      return;
+    }
+
+    // Marcamos muerte inmediata en Phaser para que ninguna otra función (como movimiento) se ejecute
+    (this.currentPlayer as any).isDead = true;
+    this.isTransitioning = true;
+
+    console.log("☠️ Secuencia de muerte iniciada");
+
+    // 2. DETENER TODO EL MOVIMIENTO
+    if (this.gridMovement) {
+      this.gridMovement.setFrozen(true);
+    }
+
+    // 3. EJECUTAR ANIMACIÓN (Asegúrate de que el método existe)
+    try {
+      if (typeof this.currentPlayer.dead === "function") {
+        this.currentPlayer.dead();
+      } else {
+        // Si no existe .dead(), forzamos la animación por clave
+        (this.currentPlayer as any).play("death", true);
+      }
+
+      this.sound.play("dead_bumpkin", { volume: 0.75 });
+    } catch (e) {
+      console.error("Error al reproducir animación de muerte:", e);
+    }
+
+    // 4. RETRASO PARA EL CARTEL DE REACT
+    // No envíes GAME_OVER al instante, o React destruirá la escena antes de ver la animación
+    this.time.delayedCall(2000, () => {
+      if (this.portalService) {
+        this.portalService.send("GAME_OVER");
+      }
+    });
+  }*/
+  /** 🛡️ RECIBIR DAÑO (Enemigo/Trampa -> Jugador) */
+  public handlePlayerDamage(baseAttack: number, critchancebase?: number) {
+    const stats = this.portalService?.state.context.stats;
+    const player = this.currentPlayer as any;
+    if (!stats || player.isDead) return;
+
+    // 1. Crítico del Enemigo (10% de chance, x2 daño)
+    const isCrit = Math.random() < (critchancebase || 0.1);
+
+    const attackAfterCrit = isCrit ? baseAttack * 2 : baseAttack;
+
+    // 2. Mitigación por TU DEFENSA
+    // Daño Final = Ataque - Defensa (Mínimo siempre 1 de daño)
+    const damageDealt = Math.max(
+      1,
+      Math.round(attackAfterCrit - (stats.defense || 0)),
+    );
+    const energyResult = stats.energy - damageDealt;
+
+    if (energyResult <= 0 || player.isDead) {
+      // Sincronizamos vida a 0 y matamos
+      this.portalService?.send("UPDATE_STATS", { stats: { energy: 0 } });
+      this.handlePlayerDeath();
+    } else {
+      // Daño normal: Enviamos a la máquina (esto dispara el 'hurt' visual en React)
+      this.portalService?.send("HIT_TRAP", { damage: damageDealt });
+    }
+  }
+
+  /** ⚔️ HACER DAÑO (Jugador -> Enemigo) */
+  //cuando añada armas: public handleEnemyDamage(enemy: EnemyContainer, weaponDamage: number)
+  public handleEnemyDamage(enemy: EnemyContainer) {
+    const stats = this.portalService?.state.context.stats;
+    if (!stats) return;
+
+    // 1. Determinar si es crítico
+    const isCrit = Math.random() < (stats.criticalChance || 0.1);
+
+    // 2. Calcular el daño base (Ataque del jugador)
+    const baseAttack = stats.attack || 1;
+
+    // 3. Aplicar el multiplicador en una nueva variable constante
+    // Si es crítico multiplicamos por 2, si no, por 1
+    const multiplier = isCrit ? 2 : 1;
+    const totalAttack = baseAttack * multiplier;
+
+    // 4. Mitigación por DEFENSA DEL ENEMIGO
+    const damageDealt = Math.max(
+      1,
+      Math.round(totalAttack - (enemy.stats.defense || 0)),
+    );
+
+    // 5. Aplicar daño al enemigo
+    enemy.takeDamage(damageDealt, isCrit);
+  }
+
+  /** 💀 SECUENCIA DE MUERTE */
+  public handlePlayerDeath() {
+    // 1. PRIORIDAD: Usar un flag local para evitar que el error se repita en bucle
+    if (
+      this.isTransitioning ||
+      !this.currentPlayer ||
+      (this.currentPlayer as any).isDead
+    ) {
+      return;
+    }
+
+    // Marcamos muerte inmediata en Phaser para que ninguna otra función (como movimiento) se ejecute
+    (this.currentPlayer as any).isDead = true;
+    this.isTransitioning = true;
+
+    // 2. DETENER TODO EL MOVIMIENTO
+
+    // 3. EJECUTAR ANIMACIÓN (Asegúrate de que el método existe)
+
+    this.currentPlayer.dead();
+
+    this.sound.play("dead_bumpkin", { volume: 0.75 });
+
+    if (this.gridMovement) {
+      this.gridMovement.setFrozen(true);
+    }
+
+    // 4. RETRASO PARA EL CARTEL DE REACT
+    // No envíes GAME_OVER al instante, o React destruirá la escena antes de ver la animación
+    this.time.delayedCall(2000, () => {
+      if (this.portalService) {
+        this.portalService.send("GAME_OVER");
+      }
+    });
+  }
+
+  private loadBumpkinAnimations() {
+    if (!this.currentPlayer || this.currentPlayer.isDead) return;
+    if (!this.cursorKeys) return;
+    if (
+      this.currentPlayer.isMining ||
+      this.currentPlayer.isAttacking ||
+      this.currentPlayer.isHurting ||
+      this.currentPlayer.isSwimming
+    ) {
+      return;
+    }
+    let animation!: AnimationKeys;
+    if (
+      !this.currentPlayer.isHurting &&
+      !this.currentPlayer.isAttacking &&
+      !this.currentPlayer.isMining &&
+      !this.currentPlayer.isAxe &&
+      !this.currentPlayer.isHammering &&
+      !this.currentPlayer.isSwimming &&
+      !this.currentPlayer.isDrilling &&
+      !this.currentPlayer.isDigging &&
+      !this.currentPlayer.isWalking
+    ) {
+      animation = "idle";
+    }
+
+    return this.currentPlayer?.[animation]?.();
+  }
   public spawnEnemy(type: EnemyType, x: number, y: number) {
     const stats = ENEMY_TYPES[type];
     // Creamos el sprite (ajusta 'slime_green' por el nombre real de tu asset)
@@ -552,6 +921,7 @@ export class DeepDungeonScene extends BaseScene {
     const currentLevel =
       this.portalService?.state.context.stats.currentLevel || 1;
     trapAtPos.activate();
+    this.sound.play("spikes_trap", { volume: 0.5 });
     // 4. ¿EL JUGADOR PISÓ LA TRAMPA?
     if (this.currentPlayer) {
       const pTx = Math.floor(this.currentPlayer.x / 16);
@@ -590,80 +960,29 @@ export class DeepDungeonScene extends BaseScene {
       }
     });
   }
-  update() {
-    super.update();
+  public reducePlayerEnergy(amount: number) {
+    const stats = this.portalService?.state.context.stats;
+    if (!stats || (this.currentPlayer as any).isDead) return;
 
-    if (!this.currentPlayer || !this.cursorKeys) return;
-    if (this.currentPlayer.isDead) return;
-    if (this.isPlaying) {
-      // 🔴 1. COMPROBACIÓN DE MUERTE CENTRALIZADA
-      const energy = this.portalService?.state.context.stats.energy ?? 100;
-      if (energy < 1) {
-        this.handlePlayerDeath();
-        return;
-      }
+    const currentEnergy = stats.energy;
+    const finalEnergy = Math.max(0, currentEnergy - amount);
 
-      const body = this.currentPlayer.body as Phaser.Physics.Arcade.Body;
-      if (body) {
-        body.setVelocity(0, 0);
-      }
-
-      // --- 1. FILTRO DE ESTADO ---
-      // Si el jugador está atacando o sufriendo daño, BLOQUEAMOS el input.
-      // Esto evita que "atropelles" enemigos o que las animaciones se pisen.
-      const isBusy =
-        this.currentPlayer.isAttacking ||
-        this.currentPlayer.isHurting ||
-        this.currentPlayer.isMining;
-
-      if (!isBusy) {
-        // Solo permitimos movimiento y acciones si NO está ocupado
-        this.gridMovement?.handleInput(this.cursorKeys as any);
-        this.handlePlayerActions(); // Aquí es donde disparas el ataque
-      }
-
-      // --- 2. ANIMACIONES Y MÁSCARA ---
-      // Las animaciones deben seguir actualizándose (o el sistema de control de estas)
-      this.loadBumpkinAnimations();
-
-      if (this.darknessMask && this.visionCircle) {
-        const x = this.currentPlayer.x;
-        const y = this.currentPlayer.y;
-        this.darknessMask.erase(this.visionCircle, x, y);
-      }
+    // Si el golpe es fatal (llega a 0)
+    if (finalEnergy === 0) {
+      (this.currentPlayer as any).isDead = true;
+      this.sound.play("dead_bumpkin");
+      // Ejecuta la animación
+      this.handlePlayerDeath();
+      // Retrasamos el envío a la máquina 1.5s para que se vea la animación
+      this.time.delayedCall(1500, () => {
+        this.portalService?.send("UPDATE_STATS", { stats: { energy: 0 } });
+      });
+    } else {
+      // Si no es fatal, actualizamos normal
+      this.portalService?.send("UPDATE_STATS", {
+        stats: { energy: finalEnergy },
+      });
     }
-    if (this.isReady) {
-      this.portalService?.send("START");
-      this.lastAttempt = this.time.now;
-    }
-  }
-  private loadBumpkinAnimations() {
-    if (!this.currentPlayer || this.currentPlayer.isDead) return;
-    if (!this.cursorKeys) return;
-    if (
-      this.currentPlayer.isMining ||
-      this.currentPlayer.isAttacking ||
-      this.currentPlayer.isHurting ||
-      this.currentPlayer.isSwimming
-    ) {
-      return;
-    }
-    let animation!: AnimationKeys;
-    if (
-      !this.currentPlayer.isHurting &&
-      !this.currentPlayer.isAttacking &&
-      !this.currentPlayer.isMining &&
-      !this.currentPlayer.isAxe &&
-      !this.currentPlayer.isHammering &&
-      !this.currentPlayer.isSwimming &&
-      !this.currentPlayer.isDrilling &&
-      !this.currentPlayer.isDigging &&
-      !this.currentPlayer.isWalking
-    ) {
-      animation = "idle";
-    }
-
-    return this.currentPlayer?.[animation]?.();
   }
   private handlePlayerActions() {
     if (!this.currentPlayer || !this.playerKeys) return;
@@ -861,33 +1180,6 @@ export class DeepDungeonScene extends BaseScene {
     this.cameras.main.once("camerafadeoutcomplete", () => {
       // 2. Iniciamos la nueva escena con el mismo número
       this.scene.start("deep-dungeon", { level: nextLevel });
-    });
-  }
-
-  // Nuevo método en la escena:
-  private handlePlayerDeath() {
-    // Si ya está muerto, salimos para no repetir
-    if (!this.currentPlayer || this.currentPlayer.isDead) return;
-
-    // 1. Bloqueo lógico
-    this.currentPlayer.isDead = true;
-
-    // 2. IMPORTANTE: No uses physics.pause(), porque congela todo.
-    // Solo desactiva el cuerpo del jugador.
-    if (this.currentPlayer.body) {
-      (this.currentPlayer.body as Phaser.Physics.Arcade.Body).enable = false;
-    }
-
-    // 3. Detener enemigos para que no estorben la animación
-    this.enemies?.forEach((enemy) => {
-      if (enemy.active) enemy.playAnimationEnemies("idle");
-    });
-
-    // 4. Disparar la animación
-    this.currentPlayer.dead();
-
-    this.time.delayedCall(1200, () => {
-      this.portalService?.send("GAME_OVER");
     });
   }
   private spawnCrystals(
@@ -1143,7 +1435,6 @@ export class DeepDungeonScene extends BaseScene {
   }
   private buildLevel(level: number) {
     //console.log("Construyendo elementos para el nivel:", level);
-
     // Limpieza lógica
     this.occupiedTiles.clear();
     this.crystals = [];
@@ -1182,7 +1473,12 @@ export class DeepDungeonScene extends BaseScene {
       this.currentLevel === 2 ||
       this.currentLevel === 3 ||
       this.currentLevel === 4 ||
-      this.currentLevel === 5
+      this.currentLevel === 5 ||
+      this.currentLevel === 11 ||
+      this.currentLevel === 12 ||
+      this.currentLevel === 13 ||
+      this.currentLevel === 14 ||
+      this.currentLevel === 15
     )
       this.darknessMask.fill(0x191a27, 1);
     else if (
@@ -1190,7 +1486,12 @@ export class DeepDungeonScene extends BaseScene {
       this.currentLevel === 7 ||
       this.currentLevel === 8 ||
       this.currentLevel === 9 ||
-      this.currentLevel === 10
+      this.currentLevel === 10 ||
+      this.currentLevel === 16 ||
+      this.currentLevel === 17 ||
+      this.currentLevel === 18 ||
+      this.currentLevel === 19 ||
+      this.currentLevel === 20
     )
       this.darknessMask.fill(0x271714, 1);
     this.darknessMask.setDepth(2000);
@@ -1230,7 +1531,6 @@ export class DeepDungeonScene extends BaseScene {
   public get gameState() {
     return this.registry.get("gameState") as GameState;
   }
-
   public get score() {
     return this.portalService?.state?.context.score ?? 0;
   }

@@ -1,4 +1,4 @@
-import React from "react";
+/*import React from "react";
 
 interface CodexProps {
   enemies: any[];
@@ -52,7 +52,7 @@ const Codex: React.FC<CodexProps> = ({ enemies, items, onClose }) => {
         <section>
           <h2>{`DISCOVERABLE ITEMS`}</h2>
           <div className="items-grid">
-            {/* Aquí mapeas tus cristales y picos del mapa */}
+            {/* Aquí mapeas tus cristales y picos del mapa }
             {items.map((item, i) => (
               <div key={i} className="item-slot">
                 <img src={`assets/icons/${item.texture.key}.png`} />
@@ -66,4 +66,4 @@ const Codex: React.FC<CodexProps> = ({ enemies, items, onClose }) => {
   );
 };
 
-export default Codex;
+export default Codex;*/
