@@ -53,6 +53,9 @@ export class EnemyContainer extends Phaser.GameObjects.Container {
   private isInvulnerable: boolean = false;
   private isDead = false;
   private nameText: Phaser.GameObjects.Text;
+  private _postUpdateCb!: () => void;
+  private attackSound!: Phaser.Sound.BaseSound;
+  private attackAoESound?: Phaser.Sound.BaseSound;
 
   constructor({ x, y, scene, player, type }: Props) {
     super(scene, x, y);
@@ -60,6 +63,7 @@ export class EnemyContainer extends Phaser.GameObjects.Container {
     this.scene = scene as DeepDungeonScene;
     this.player = player;
     this.enemyType = type;
+
     // Inicializamos con la posición actual para no bloquear el 0,0
     this.nextGridX = Math.floor(x / 16) * 16;
     this.nextGridY = Math.floor(y / 16) * 16;
@@ -67,9 +71,17 @@ export class EnemyContainer extends Phaser.GameObjects.Container {
     this.stats = ENEMY_TYPES[this.enemyType];
     this.currentHp = this.stats.hp; // Aquí debería ser 2 según tu Enemies.ts
     this.trapDamage = this.stats.trapDamage ?? 2; // Si no existe, 2 por defecto
+    // Cargar sonidos de ataque basados en el tipo de enemigo
+    const name = this.stats.sprite.toLowerCase();
+    this.attackSound = this.scene.sound.add(`${name}_attack`, { volume: 0.2 });
+    if (this.stats.damageAoE > 0) {
+      this.attackAoESound = this.scene.sound.add(`${name}_attackAoE`, {
+        volume: 0.2,
+      });
+    }
     // 2. CREAR EL SPRITE UNA SOLA VEZ
     // Usamos el nombre base que definiste en Enemies.ts ("skeleton")
-    const assetKey = `${this.stats.sprite.toLowerCase()}_idle`;
+    const assetKey = `${name}_idle`;
 
     this.spriteBody = this.scene.add.sprite(0, 0, assetKey);
     this.spriteBody.setOrigin(0.5, 0.5);
@@ -115,12 +127,13 @@ export class EnemyContainer extends Phaser.GameObjects.Container {
       },
     ).setOrigin(0.5);
     this.healthText.setAlign("center");
-    this.scene.events.on("postupdate", () => {
+    this._postUpdateCb = () => {
       if (this.healthText) {
         this.healthText.x = Math.round(this.healthText.x);
         this.healthText.y = Math.round(this.healthText.y);
       }
-    });
+    };
+    this.scene.events.on("postupdate", this._postUpdateCb);
     // 2. Crear el Icono de corazón (A la DERECHA: x = 8)
     this.heartIcon = new Phaser.GameObjects.Image(
       this.scene,
@@ -328,7 +341,7 @@ export class EnemyContainer extends Phaser.GameObjects.Container {
     // Si ya está muerto, salimos inmediatamente para no repetir procesos
     if (this.isDead) return;
     this.isDead = true;
-
+    this.scene.events.off("postupdate", this._postUpdateCb);
     // 2. DESACTIVAR FÍSICAS E INTERACCIÓN INMEDIATAMENTE
     this.disableInteractive();
     if (this.body) {
@@ -343,7 +356,7 @@ export class EnemyContainer extends Phaser.GameObjects.Container {
     //console.log("Murió el enemigo:", enemyName);
 
     this.scene.portalService?.send("ENEMY_KILLED", {
-      enemyType: enemyName.toLowerCase(),
+      enemyName: enemyName.toLowerCase(),
     });
 
     // 3. ENVIAR PUNTOS
@@ -411,8 +424,7 @@ export class EnemyContainer extends Phaser.GameObjects.Container {
     this.setDepth(150);
     this.playAnimationEnemies("attack");
 
-    const name = this.enemyType.toLowerCase();
-    this.addSound(`${name}_attack`).play();
+    this.attackSound.play();
 
     // IMPACTO: A los 500ms (ajusta según el frame de tu animación de golpe)
     this.scene.time.delayedCall(50, () => {
@@ -449,8 +461,7 @@ export class EnemyContainer extends Phaser.GameObjects.Container {
     this.setDepth(150);
     this.playAnimationEnemies("attackAoE");
 
-    const name = this.enemyType.toLowerCase();
-    this.addSound(`${name}_attackAoE`).play();
+    this.attackAoESound?.play();
 
     // IMPACTO AOE
     this.scene.time.delayedCall(50, () => {
@@ -616,12 +627,13 @@ export class EnemyContainer extends Phaser.GameObjects.Container {
     // Guardamos una referencia local a la escena para el overlap
     const currentScene = this.scene as DeepDungeonScene;
 
-    this.scene.physics.add.overlap(
-      this.player!,
+    if (!this.player) return;
+    const overlapObj = this.scene.physics.add.overlap(
+      this.player,
       drop,
       () => {
-        // --- SOLUCIÓN AL ERROR ---
-        // Usamos la referencia local 'currentScene' que guardamos arriba
+        overlapObj.destroy();
+
         if (
           config.label &&
           typeof currentScene.spawnFloatingText === "function"

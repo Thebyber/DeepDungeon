@@ -599,7 +599,7 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
 
   private createFrontAuraAnimation() {
     if (!this.scene || !this.scene.anims) return;
-
+    if (this.scene.anims.exists(this.frontAuraAnimationKey as string)) return;
     this.scene.anims.create({
       key: this.frontAuraAnimationKey,
       frames: this.scene.anims.generateFrameNumbers(
@@ -616,7 +616,7 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
 
   private createBackAuraAnimation() {
     if (!this.scene || !this.scene.anims) return;
-
+    if (this.scene.anims.exists(this.backAuraAnimationKey as string)) return;
     this.scene.anims.create({
       key: this.backAuraAnimationKey,
       frames: this.scene.anims.generateFrameNumbers(
@@ -709,7 +709,7 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
 
   private createDeathAnimation() {
     if (!this.scene || !this.scene.anims) return;
-
+    if (this.scene.anims.exists(this.deathAnimationKey as string)) return;
     this.scene.anims.create({
       key: this.deathAnimationKey,
       frames: this.scene.anims.generateFrameNumbers(
@@ -727,7 +727,7 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
   private createAttackAnimation(frameRate = 12) {
     if (!this.scene || !this.scene.anims) return;
     this.frameRateAttack = frameRate;
-
+    if (this.scene.anims.exists(this.attackAnimationKey as string)) return;
     this.scene.anims.create({
       key: this.attackAnimationKey,
       frames: this.scene.anims.generateFrameNumbers(
@@ -744,7 +744,7 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
 
   private createMiningAnimation() {
     if (!this.scene || !this.scene.anims) return;
-
+    if (this.scene.anims.exists(this.miningAnimationKey as string)) return;
     this.scene.anims.create({
       key: this.miningAnimationKey,
       frames: this.scene.anims.generateFrameNumbers(
@@ -761,7 +761,7 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
 
   private createHurtAnimation() {
     if (!this.scene || !this.scene.anims) return;
-
+    if (this.scene.anims.exists(this.hurtAnimationKey as string)) return;
     this.scene.anims.create({
       key: this.hurtAnimationKey,
       frames: this.scene.anims.generateFrameNumbers(
@@ -777,7 +777,7 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
   }
   private createAxeAnimation() {
     if (!this.scene || !this.scene.anims) return;
-
+    if (this.scene.anims.exists(this.axeAnimationKey as string)) return;
     this.scene.anims.create({
       key: this.axeAnimationKey,
       frames: this.scene.anims.generateFrameNumbers(
@@ -793,6 +793,7 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
   }
   private createSwimmingAnimation() {
     if (!this.scene || !this.scene.anims) return;
+    if (this.scene.anims.exists(this.swimmingAnimationKey as string)) return;
     this.scene.anims.create({
       key: this.swimmingAnimationKey,
       frames: this.scene.anims.generateFrameNumbers(
@@ -808,6 +809,7 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
   }
   private createHammeringAnimation() {
     if (!this.scene || !this.scene.anims) return;
+    if (this.scene.anims.exists(this.hammeringAnimationKey as string)) return;
     this.scene.anims.create({
       key: this.hammeringAnimationKey,
       frames: this.scene.anims.generateFrameNumbers(

@@ -77,6 +77,12 @@ export class DeepDungeonScene extends BaseScene {
   private visionCircle?: Phaser.GameObjects.Graphics;
   private backgroundMusic!: Phaser.Sound.BaseSound;
   private lastAttempt!: number;
+  private _lastFogX: number = -1;
+  private _lastFogY: number = -1;
+  private swipeLeft = false;
+  private swipeRight = false;
+  private swipeUp = false;
+  private swipeDown = false;
   groundLayer: any;
   wallLayer: any;
 
@@ -320,9 +326,9 @@ export class DeepDungeonScene extends BaseScene {
     this.load.image("shield", "world/DeepDungeonAssets/shield.png");
     this.load.image("crit", "world/DeepDungeonAssets/crit.png");
     this.load.image("pickaxe", "world/DeepDungeonAssets/pickaxe.png");
-    this.load.spritesheet("skeleton", "world/DeepDungeonAssets/pickaxe.png", {
-      frameWidth: 96,
-      frameHeight: 64,
+    this.load.spritesheet("skeleton", "world/DeepDungeonAssets/skeleton.png", {
+      frameWidth: 13,
+      frameHeight: 16,
     });
     this.load.spritesheet(
       "skeleton_idle",
@@ -580,26 +586,22 @@ export class DeepDungeonScene extends BaseScene {
       }
       // --- AÑADE AQUÍ EL CONTROL DE SWIPE ---
       this.input.on("pointerup", (pointer: Phaser.Input.Pointer) => {
-        const swipeThreshold = 50; // Distancia mínima para que cuente como movimiento
+        const swipeThreshold = 50;
         const dragX = pointer.upX - pointer.downX;
         const dragY = pointer.upY - pointer.downY;
 
-        // Si el movimiento fue lo suficientemente largo
         if (Math.max(Math.abs(dragX), Math.abs(dragY)) > swipeThreshold) {
-          // Determinamos si fue más horizontal o vertical
           if (Math.abs(dragX) > Math.abs(dragY)) {
-            // Movimiento Horizontal
             if (dragX > 0) {
-              this.gridMovement?.move(16, 0); // Derecha (D)
+              this.swipeRight = true;
             } else {
-              this.gridMovement?.move(-16, 0); // Izquierda (A)
+              this.swipeLeft = true;
             }
           } else {
-            // Movimiento Vertical
             if (dragY > 0) {
-              this.gridMovement?.move(0, 16); // Abajo (S)
+              this.swipeDown = true;
             } else {
-              this.gridMovement?.move(0, -16); // Arriba (W)
+              this.swipeUp = true;
             }
           }
         }
@@ -695,7 +697,20 @@ export class DeepDungeonScene extends BaseScene {
 
       if (!isBusy) {
         // Solo permitimos movimiento y acciones si NO está ocupado
-        this.gridMovement?.handleInput(this.cursorKeys as any);
+        // PONER:
+        this.gridMovement?.handleInput({
+          ...this.cursorKeys,
+          left: { isDown: this.cursorKeys?.left?.isDown || this.swipeLeft },
+          right: { isDown: this.cursorKeys?.right?.isDown || this.swipeRight },
+          up: { isDown: this.cursorKeys?.up?.isDown || this.swipeUp },
+          down: { isDown: this.cursorKeys?.down?.isDown || this.swipeDown },
+        } as any);
+
+        // Resetear swipe después de pasarlo al input
+        this.swipeLeft = false;
+        this.swipeRight = false;
+        this.swipeUp = false;
+        this.swipeDown = false;
         this.handlePlayerActions(); // Aquí es donde disparas el ataque
       }
 
@@ -704,9 +719,13 @@ export class DeepDungeonScene extends BaseScene {
       this.loadBumpkinAnimations();
 
       if (this.darknessMask && this.visionCircle) {
-        const x = this.currentPlayer.x;
-        const y = this.currentPlayer.y;
-        this.darknessMask.erase(this.visionCircle, x, y);
+        const x = Math.round(this.currentPlayer.x);
+        const y = Math.round(this.currentPlayer.y);
+        if (x !== this._lastFogX || y !== this._lastFogY) {
+          this.darknessMask.erase(this.visionCircle, x, y);
+          this._lastFogX = x;
+          this._lastFogY = y;
+        }
       }
     }
     if (this.isReady) {
@@ -1086,7 +1105,11 @@ export class DeepDungeonScene extends BaseScene {
     if (validTiles.length === 0 || !this.currentPlayer) return;
 
     let spawned = 0;
-    while (spawned < count) {
+    let attempts = 0;
+    const maxAttempts = count * 10;
+
+    while (spawned < count && attempts < maxAttempts) {
+      attempts++;
       const randomTile =
         validTiles[Math.floor(Math.random() * validTiles.length)];
       const x = randomTile.getCenterX();
@@ -1111,6 +1134,10 @@ export class DeepDungeonScene extends BaseScene {
 
         // IMPORTANTE: Añadirlo al array para que se mueva
         this.enemies.push(enemy);
+        // Colisión con los cristales
+        this.crystals.forEach((crystal) => {
+          this.physics.add.collider(enemy, crystal);
+        });
 
         spawned++;
       }
@@ -1196,12 +1223,6 @@ export class DeepDungeonScene extends BaseScene {
     this.physics.pause();
     this.events.off("PLAYER_MOVED");
     this.events.off("UPDATE_ENEMIES");
-    this.portalService?.send("NEXT_MAP", { level: nextLevel });
-
-    // Dale 100ms para que la máquina actualice el contexto antes de cambiar de escena
-    this.time.delayedCall(100, () => {
-      this.cameras.main.fadeOut(500, 0, 0, 0);
-    });
 
     this.cameras.main.fadeOut(500, 0, 0, 0);
     this.cameras.main.once("camerafadeoutcomplete", () => {
@@ -1289,11 +1310,6 @@ export class DeepDungeonScene extends BaseScene {
           undefined,
           this,
         );
-
-        // Esto evitará que enemigos atraviesen los cristales
-        if (this.enemies) {
-          this.physics.add.collider(this.enemies, crystal);
-        }
 
         this.occupiedTiles.add(tileKey);
         spawned++;

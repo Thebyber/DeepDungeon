@@ -131,7 +131,6 @@ export class GridMovement {
       waterLayer?.getTileAtWorldXY(nextGridX + 8, nextGridY + 8) !== null;
     if (isWater) {
       this.currentPlayer.isSwimming = true;
-
       // Activa animación de nadar
     } else {
       this.currentPlayer.isSwimming = false;
@@ -144,6 +143,7 @@ export class GridMovement {
 
     const targetCrystal = crystals.find(
       (c) =>
+        c.active &&
         Math.floor(c.x / 16) * 16 === nextGridX &&
         Math.floor(c.y / 16) * 16 === nextGridY,
     );
@@ -174,22 +174,9 @@ export class GridMovement {
         return;
       }
       player.attack();
-      // --- NUEVO CÁLCULO DE DAÑO ---
-      // Obtenemos las stats del enemigo (que deberían incluir 'defense')
-      const enemyStats = (targetEnemy as any).stats || { defense: 0 };
-
-      // 1. Calcular si es crítico
-      const isCritical = Math.random() < (stats.criticalChance || 0);
-
-      // 2. Calculamos el ataque bruto (bruto = ataque base o ataque x 2 si es crítico)
-      const rawAttack = isCritical ? stats.attack * 2 : stats.attack;
-
-      // 3. Restamos la defensa al ataque ya potenciado
-      // Esto hace que el crítico sea mucho más valioso contra enemigos acorazados
-      const finalDamage = Math.max(1, rawAttack - (enemyStats.defense || 0));
 
       // Aplicamos el daño calculado
-      targetEnemy.takeDamage(finalDamage);
+      (this.scene as any).handleEnemyDamage(targetEnemy);
       // 4. Contraataque enemigo con ligero delay
       this.scene.time.delayedCall(800, () => {
         // Comprobamos active (Phaser) y currentHp (tu lógica)
@@ -200,8 +187,8 @@ export class GridMovement {
         ) {
           // El enemigo decide cómo atacarte (animación + resta de energía interna)
           targetEnemy.attackPlayer();
-          // El jugador solo reproduce su animación visual de dolor
-          player.hurt();
+          // El jugador solo reproduce su animación visual de dolor si sigue vivo
+          if (!player.isDead) player.hurt();
         }
       });
       return;
@@ -214,6 +201,12 @@ export class GridMovement {
     // y decide si mueres o no.
     (this.scene as any).handlePlayerDamage(1);
     if (this.currentPlayer.isDead) return;
+    if (dx < 0) {
+      this.currentPlayer.faceLeft();
+    } else if (dx > 0) {
+      this.currentPlayer.faceRight();
+    }
+
     if (isWater) {
       //console.log("estoy en el agua");
       this.currentPlayer.swimming(); // Activa animación de nadar

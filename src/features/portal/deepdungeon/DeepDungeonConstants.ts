@@ -696,7 +696,7 @@ export interface Card {
 }
 
 // DEFINICIÓN DEL POOL DE CARTAS INDIVIDUALES
-const CARD_POOL: Card[] = [
+export const CARD_POOL: Card[] = [
   // --- COMUNES (Blancas) ---
   {
     name: "+2% Critical Chance",

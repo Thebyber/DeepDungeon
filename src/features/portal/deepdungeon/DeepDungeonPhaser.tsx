@@ -52,7 +52,7 @@ export const DeepDungeonPhaser: React.FC = () => {
       physics: {
         default: "arcade",
         arcade: {
-          debug: true,
+          debug: false,
           gravity: { x: 0, y: 0 },
         },
       },

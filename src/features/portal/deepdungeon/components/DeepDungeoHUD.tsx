@@ -56,77 +56,78 @@ export const DeepDungeonHUD: React.FC = () => {
   return (
     <HudContainer>
       {/* 1. BARRA DE VIDA / ENERGÍA */}
-      <div
-        className="fixed z-50 pointer-events-none"
-        style={{ top: `${PIXEL_SCALE * 6}px`, left: `${PIXEL_SCALE * 6}px` }}
-      >
-        <div className="pointer-events-auto">
-          <EnergyStats />
+      {isPlaying && (
+        <div
+          className="fixed z-50 pointer-events-none"
+          style={{ top: `${PIXEL_SCALE * 6}px`, left: `${PIXEL_SCALE * 6}px` }}
+        >
+          <div className="pointer-events-auto">
+            <EnergyStats />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* SISTEMA DE CARTAS */}
-      {portalState.context.showCardSelector && <CardSelectionHUD />}
+      {isPlaying && portalState.context.showCardSelector && (
+        <CardSelectionHUD />
+      )}
 
-      <ExhaustedAlert />
+      {isPlaying && <ExhaustedAlert />}
 
       {/* --- SECCIÓN SUPERIOR DERECHA (HUD DE BOTONES) --- */}
-      <div
-        className="fixed z-50 flex flex-col items-end gap-2"
-        style={{ right: `${PIXEL_SCALE * 3}px`, top: `${PIXEL_SCALE * 3}px` }}
-      >
-        {/* BOTÓN CÓDICE */}
+      {isPlaying && (
         <div
-          className="pointer-events-auto cursor-pointer hover:img-highlight group relative"
-          style={{
-            width: `${PIXEL_SCALE * 22}px`,
-            height: `${PIXEL_SCALE * 23}px`,
-          }}
-          onClick={() => setShowCodex(true)}
+          className="fixed z-50 flex flex-col items-end gap-2"
+          style={{ right: `${PIXEL_SCALE * 3}px`, top: `${PIXEL_SCALE * 3}px` }}
         >
-          <img
-            src={SUNNYSIDE.ui.round_button}
-            className="w-full group-active:translate-y-[2px]"
-          />
-          <img
-            src={codexIcon}
-            className="absolute w-[60%] top-[15%] left-[20%]"
-          />
+          {/* BOTÓN CÓDICE */}
+          <div
+            className="pointer-events-auto cursor-pointer hover:img-highlight group relative"
+            style={{
+              width: `${PIXEL_SCALE * 22}px`,
+              height: `${PIXEL_SCALE * 23}px`,
+            }}
+            onClick={() => setShowCodex(true)}
+          >
+            <img
+              src={SUNNYSIDE.ui.round_button}
+              className="w-full group-active:translate-y-[2px]"
+            />
+            <img
+              src={codexIcon}
+              className="absolute w-[60%] top-[15%] left-[20%]"
+            />
+          </div>
+
+          {/* BOTÓN CESTA (INVENTARIO) */}
+          <div
+            className="pointer-events-auto cursor-pointer hover:img-highlight group relative"
+            style={{
+              width: `${PIXEL_SCALE * 22}px`,
+              height: `${PIXEL_SCALE * 23}px`,
+            }}
+            onClick={() => setShowInventory(true)}
+          >
+            <img
+              src={SUNNYSIDE.ui.round_button}
+              className="w-full group-active:translate-y-[2px]"
+            />
+            <img
+              src={SUNNYSIDE.icons.basket}
+              className="absolute w-[60%] top-[15%] left-[20%]"
+            />
+          </div>
+
+          {/* CONTADOR DE PICOS */}
+          <div className="pointer-events-auto">
+            <Box
+              image={pickaxeIcon}
+              count={new Decimal(stats.inventory.pickaxe || 0)}
+              disabled={!stats.inventory.pickaxe}
+            />
+          </div>
         </div>
-
-        {/* 🔴 HE ELIMINADO EL BLOQUE DE DUNGEON POINTS (1950 PTS) DE AQUÍ */}
-
-        {/* BOTÓN CESTA (INVENTARIO) */}
-        <div
-          className="pointer-events-auto cursor-pointer hover:img-highlight group relative"
-          style={{
-            width: `${PIXEL_SCALE * 22}px`,
-            height: `${PIXEL_SCALE * 23}px`,
-          }}
-          onClick={() => setShowInventory(true)}
-        >
-          <img
-            src={SUNNYSIDE.ui.round_button}
-            className="w-full group-active:translate-y-[2px]"
-          />
-          <img
-            src={SUNNYSIDE.icons.basket}
-            className="absolute w-[60%] top-[15%] left-[20%]"
-          />
-        </div>
-
-        {/* 3. ⛏️ CONTADOR DE PICOS (Usando InnerPanel de SFL) */}
-        <div className="pointer-events-auto">
-          <Box
-            image={pickaxeIcon}
-            // Usamos Decimal para evitar el Error 500 y que el número se vea perfecto
-            count={new Decimal(stats.inventory.pickaxe || 0)}
-            disabled={!stats.inventory.pickaxe}
-          />
-        </div>
-      </div>
-
-      {/* ... (Resto de tus Modales de Inventario y Codex se mantienen igual) ... */}
+      )}
 
       {/* MODAL DE INVENTARIO */}
       <Modal
@@ -154,28 +155,30 @@ export const DeepDungeonHUD: React.FC = () => {
       </Modal>
 
       {/* BOTÓN IR A CASA (ABAJO IZQUIERDA) */}
-      <div
-        className="fixed z-50 flex justify-between w-full px-4"
-        style={{ bottom: `${PIXEL_SCALE * 3}px`, pointerEvents: "none" }}
-      >
+      {isPlaying && (
         <div
-          className="pointer-events-auto cursor-pointer hover:img-highlight group relative"
-          style={{
-            width: `${PIXEL_SCALE * 22}px`,
-            height: `${PIXEL_SCALE * 23}px`,
-          }}
-          onClick={() => goHome()}
+          className="fixed z-50 flex justify-between w-full px-4"
+          style={{ bottom: `${PIXEL_SCALE * 3}px`, pointerEvents: "none" }}
         >
-          <img
-            src={SUNNYSIDE.ui.round_button}
-            className="w-full group-active:translate-y-[2px]"
-          />
-          <img
-            src={SUNNYSIDE.icons.worldIcon}
-            className="absolute w-[60%] top-[15%] left-[20%]"
-          />
+          <div
+            className="pointer-events-auto cursor-pointer hover:img-highlight group relative"
+            style={{
+              width: `${PIXEL_SCALE * 22}px`,
+              height: `${PIXEL_SCALE * 23}px`,
+            }}
+            onClick={() => goHome()}
+          >
+            <img
+              src={SUNNYSIDE.ui.round_button}
+              className="w-full group-active:translate-y-[2px]"
+            />
+            <img
+              src={SUNNYSIDE.icons.worldIcon}
+              className="absolute w-[60%] top-[15%] left-[20%]"
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* MODAL DEL CODEX */}
       <Modal
@@ -206,10 +209,7 @@ export const DeepDungeonHUD: React.FC = () => {
                   background: activeTab === "Enemies" ? "#ead4aa" : undefined,
                 }}
               >
-                <SquareIcon
-                  icon={SUNNYSIDE.icons.expression_confused}
-                  width={9}
-                />
+                <SquareIcon icon={SUNNYSIDE.icons.death} width={9} />
               </OuterPanel>
               <OuterPanel
                 className="p-1 cursor-pointer"
@@ -218,7 +218,7 @@ export const DeepDungeonHUD: React.FC = () => {
                   background: activeTab === "Crystals" ? "#ead4aa" : undefined,
                 }}
               >
-                <SquareIcon icon={SUNNYSIDE.icons.search} width={9} />
+                <SquareIcon icon={SUNNYSIDE.icons.hammer} width={9} />
               </OuterPanel>
               <OuterPanel
                 className="p-1 cursor-pointer"
@@ -227,7 +227,10 @@ export const DeepDungeonHUD: React.FC = () => {
                   background: activeTab === "Drops" ? "#ead4aa" : undefined,
                 }}
               >
-                <SquareIcon icon={SUNNYSIDE.icons.treasure} width={9} />
+                <SquareIcon
+                  icon={SUNNYSIDE.icons.expression_confused}
+                  width={9}
+                />
               </OuterPanel>
               <OuterPanel
                 className="p-1 cursor-pointer"
