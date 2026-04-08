@@ -1406,6 +1406,11 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
   }
 
   public idle() {
+    // Siempre reseteamos los flags de acción al volver a idle
+    this.isAttacking = false;
+    this.isHurting = false;
+    this.isMining = false;
+
     if (
       this.sprite?.anims &&
       this.scene?.anims.exists(this.idleAnimationKey as string) &&
@@ -1715,14 +1720,21 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
         this.isDrilling = false;
         this.isDigging = false;
         this.sprite.anims.play(this.hurtAnimationKey as string, false);
-        onAnimationComplete(
-          this.sprite,
-          this.hurtAnimationKey as string,
-          () => (this.isHurting = false),
-        );
+
+        const hurtKey = this.hurtAnimationKey as string;
+        this.sprite.off(`animationcomplete-${hurtKey}`);
+        this.sprite.once(`animationcomplete-${hurtKey}`, () => {
+          this.isHurting = false;
+        });
+
+        // Fallback: si la animación es interrumpida (p.ej. idle del enemigo muerto)
+        this.scene?.time.delayedCall(500, () => {
+          if (this.isHurting) this.isHurting = false;
+        });
       } catch (e) {
         // eslint-disable-next-line no-console
         console.log("Bumpkin Container: Error playing hurt animation: ", e);
+        this.isHurting = false;
       }
     }
   }
