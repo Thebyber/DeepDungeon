@@ -842,8 +842,17 @@ export class DeepDungeonScene extends BaseScene {
     );
     const energyResult = stats.energy - damageDealt;
 
-    if (isCrit && this.currentPlayer) {
-      this.spawnCritText(this.currentPlayer.x, this.currentPlayer.y, true);
+    if (canCrit && this.currentPlayer) {
+      const px = this.currentPlayer.x;
+      const py = this.currentPlayer.y;
+      if (isCrit) {
+        this.spawnCritText(px, py, true);
+        this.time.delayedCall(300, () => {
+          this.spawnDamageText(px, py, damageDealt, true);
+        });
+      } else {
+        this.spawnDamageText(px, py, damageDealt, true);
+      }
     }
 
     if (energyResult <= 0 || player.isDead) {
@@ -879,6 +888,11 @@ export class DeepDungeonScene extends BaseScene {
 
     if (isCrit) {
       this.spawnCritText(enemy.x, enemy.y, false);
+      this.time.delayedCall(300, () => {
+        this.spawnDamageText(enemy.x, enemy.y, damageDealt, false);
+      });
+    } else {
+      this.spawnDamageText(enemy.x, enemy.y, damageDealt, false);
     }
 
     // 5. Aplicar daño al enemigo
@@ -989,6 +1003,12 @@ export class DeepDungeonScene extends BaseScene {
         const currentEnergy =
           this.portalService?.state.context.stats.energy ?? 0;
         this.portalService?.send("HIT_TRAP", { damage });
+        this.spawnDamageText(
+          this.currentPlayer.x,
+          this.currentPlayer.y,
+          damage,
+          true,
+        );
         if (currentEnergy - damage <= 0) {
           //2. SI LA TRAMPA TE MATA, EJECUTAMOS LA MUERTE
           this.handlePlayerDeath();
@@ -1394,6 +1414,38 @@ export class DeepDungeonScene extends BaseScene {
     });
 
     orb.destroy();
+  }
+
+  public spawnDamageText(
+    x: number,
+    y: number,
+    damage: number,
+    isEnemy: boolean = false,
+  ) {
+    const text = this.add
+      .text(Math.floor(x), Math.floor(y) - 8, `-${damage}`, {
+        fontFamily: "monospace",
+        fontSize: isEnemy ? "7px" : "6px",
+        color: "#ff6666",
+        stroke: "#000000",
+        strokeThickness: 2,
+        resolution: 10,
+      })
+      .setOrigin(0.5)
+      .setDepth(9998);
+
+    this.tweens.add({
+      targets: text,
+      y: text.y - 18,
+      alpha: { from: 1, to: 0 },
+      duration: 800,
+      ease: "Quad.easeOut",
+      onUpdate: () => {
+        text.x = Math.round(text.x);
+        text.y = Math.round(text.y);
+      },
+      onComplete: () => text.destroy(),
+    });
   }
 
   public spawnCritText(x: number, y: number, isEnemy: boolean = false) {

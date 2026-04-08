@@ -1643,26 +1643,30 @@ export class BumpkinContainer extends Phaser.GameObjects.Container {
     this.addSound("sword_attack").play();
     if (
       this.sprite?.anims &&
-      this.scene?.anims.exists(this.attackAnimationKey as string) &&
-      this.sprite?.anims.getName() !== this.attackAnimationKey
+      this.scene?.anims.exists(this.attackAnimationKey as string)
     ) {
       try {
-        //this.disableTools("sword");
         this.isAttacking = true;
-        //this.enableSword(true);
         this.sprite.anims.play(this.attackAnimationKey as string, true);
-        onAnimationComplete(
-          this.sprite,
-          this.attackAnimationKey as string,
-          () => {
-            this.isAttacking = false;
-            //this.enableSword(false);
-            EventBus.emit("animation-attack-completed");
-          },
-        );
+
+        // Listener específico para esta animación (no se confunde con otras)
+        const key = this.attackAnimationKey as string;
+        const onComplete = () => {
+          this.isAttacking = false;
+          EventBus.emit("animation-attack-completed");
+        };
+        this.sprite.off(`animationcomplete-${key}`);
+        this.sprite.once(`animationcomplete-${key}`, onComplete);
+
+        // Fallback: si la animación no llega a completar (p.ej. hurt la interrumpe)
+        // liberamos el flag tras la duración máxima esperada
+        this.scene?.time.delayedCall(600, () => {
+          if (this.isAttacking) this.isAttacking = false;
+        });
       } catch (e) {
         // eslint-disable-next-line no-console
         console.log("Bumpkin Container: Error playing attack animation: ", e);
+        this.isAttacking = false;
       }
     }
   }
