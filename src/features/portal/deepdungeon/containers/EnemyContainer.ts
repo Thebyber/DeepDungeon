@@ -441,6 +441,7 @@ export class EnemyContainer extends Phaser.GameObjects.Container {
       (this.scene as any).handlePlayerDamage(
         this.stats.damage,
         this.stats.criticalChance,
+        true,
       );
     });
 
@@ -479,6 +480,7 @@ export class EnemyContainer extends Phaser.GameObjects.Container {
       (this.scene as any).handlePlayerDamage(
         this.stats.damageAoE,
         this.stats.criticalChance,
+        true,
       );
 
       // 2. COMPROBACIÓN CRÍTICA:

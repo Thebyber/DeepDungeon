@@ -639,7 +639,7 @@ export const DROP_ITEMS_CONFIG: Record<string, DropItem> = {
   },
   CRIT: {
     sprite: "crit",
-    label: "+5% Critical Chance",
+    label: "+2% Critical Chance",
     action: (stats) => {
       stats.criticalChance += 0.02;
     },

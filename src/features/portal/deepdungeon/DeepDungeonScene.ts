@@ -821,30 +821,35 @@ export class DeepDungeonScene extends BaseScene {
     });
   }*/
   /** 🛡️ RECIBIR DAÑO (Enemigo/Trampa -> Jugador) */
-  public handlePlayerDamage(baseAttack: number, critchancebase?: number) {
+  public handlePlayerDamage(
+    baseAttack: number,
+    critchancebase?: number,
+    canCrit: boolean = false,
+  ) {
     const stats = this.portalService?.state.context.stats;
     const player = this.currentPlayer as any;
     if (!stats || player.isDead) return;
 
-    // 1. Crítico del Enemigo (10% de chance, x2 daño)
-    const isCrit = Math.random() < (critchancebase || 0.1);
+    // 1. Crítico del Enemigo — solo si el origen es un ataque real
+    const isCrit = canCrit && Math.random() < (critchancebase || 0.1);
 
     const attackAfterCrit = isCrit ? baseAttack * 2 : baseAttack;
 
     // 2. Mitigación por TU DEFENSA
-    // Daño Final = Ataque - Defensa (Mínimo siempre 1 de daño)
     const damageDealt = Math.max(
       1,
       Math.round(attackAfterCrit - (stats.defense || 0)),
     );
     const energyResult = stats.energy - damageDealt;
 
+    if (isCrit && this.currentPlayer) {
+      this.spawnCritText(this.currentPlayer.x, this.currentPlayer.y, true);
+    }
+
     if (energyResult <= 0 || player.isDead) {
-      // Sincronizamos vida a 0 y matamos
       this.portalService?.send("UPDATE_STATS", { stats: { energy: 0 } });
       this.handlePlayerDeath();
     } else {
-      // Daño normal: Enviamos a la máquina (esto dispara el 'hurt' visual en React)
       this.portalService?.send("HIT_TRAP", { damage: damageDealt });
     }
   }
@@ -871,6 +876,10 @@ export class DeepDungeonScene extends BaseScene {
       1,
       Math.round(totalAttack - (enemy.stats.defense || 0)),
     );
+
+    if (isCrit) {
+      this.spawnCritText(enemy.x, enemy.y, false);
+    }
 
     // 5. Aplicar daño al enemigo
     enemy.takeDamage(damageDealt, isCrit);
@@ -1386,6 +1395,36 @@ export class DeepDungeonScene extends BaseScene {
 
     orb.destroy();
   }
+
+  public spawnCritText(x: number, y: number, isEnemy: boolean = false) {
+    const text = this.add
+      .text(Math.floor(x), Math.floor(y) - 10, "CRITICAL!", {
+        fontFamily: "monospace",
+        fontSize: "8px",
+        color: "#ffe000",
+        stroke: "#000000",
+        strokeThickness: 3,
+        resolution: 10,
+      })
+      .setOrigin(0.5)
+      .setDepth(9999);
+
+    this.tweens.add({
+      targets: text,
+      y: text.y - 20,
+      scaleX: { from: 1.4, to: 1 },
+      scaleY: { from: 1.4, to: 1 },
+      alpha: { from: 1, to: 0 },
+      duration: 900,
+      ease: "Quad.easeOut",
+      onUpdate: () => {
+        text.x = Math.round(text.x);
+        text.y = Math.round(text.y);
+      },
+      onComplete: () => text.destroy(),
+    });
+  }
+
   public spawnFloatingText(x: number, y: number, message: string) {
     // 1. Forzamos la posición inicial a números enteros (Math.floor)
     const text = this.add
