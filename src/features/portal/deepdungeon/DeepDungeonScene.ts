@@ -246,6 +246,10 @@ export class DeepDungeonScene extends BaseScene {
       "/world/DeepDungeonAssets/devil_attackAoE.wav",
     );
     this.load.audio(
+      "slime_attack",
+      "/world/DeepDungeonAssets/slime_attack.mp3",
+    );
+    this.load.audio(
       "dead_enemies",
       "/world/DeepDungeonAssets/dead_enemies.mp3",
     );
@@ -330,6 +334,7 @@ export class DeepDungeonScene extends BaseScene {
       frameWidth: 13,
       frameHeight: 16,
     });
+    //Skeleton
     this.load.spritesheet(
       "skeleton_idle",
       "world/DeepDungeonAssets/skeleton_idle.png",
@@ -365,6 +370,47 @@ export class DeepDungeonScene extends BaseScene {
     this.load.spritesheet(
       "skeleton_dead",
       "world/DeepDungeonAssets/skeleton_death.png",
+      {
+        frameWidth: 96,
+        frameHeight: 64,
+      },
+    );
+    //Slime
+    this.load.spritesheet(
+      "slime_idle",
+      "world/DeepDungeonAssets/slime_idle.png",
+      {
+        frameWidth: 96,
+        frameHeight: 64,
+      },
+    );
+    this.load.spritesheet(
+      "slime_hurt",
+      "world/DeepDungeonAssets/slime_hurt.png",
+      {
+        frameWidth: 96,
+        frameHeight: 64,
+      },
+    );
+    this.load.spritesheet(
+      "slime_walk",
+      "world/DeepDungeonAssets/slime_walk.png",
+      {
+        frameWidth: 96,
+        frameHeight: 64,
+      },
+    );
+    this.load.spritesheet(
+      "slime_attack",
+      "world/DeepDungeonAssets/slime_attack.png",
+      {
+        frameWidth: 96,
+        frameHeight: 64,
+      },
+    );
+    this.load.spritesheet(
+      "slime_dead",
+      "world/DeepDungeonAssets/slime_death.png",
       {
         frameWidth: 96,
         frameHeight: 64,

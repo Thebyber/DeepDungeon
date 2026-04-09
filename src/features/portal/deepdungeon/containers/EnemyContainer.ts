@@ -327,6 +327,10 @@ export class EnemyContainer extends Phaser.GameObjects.Container {
       this.spriteBody.setTint(isCritical ? 0xffff00 : 0xff0000);
       this.playAnimationEnemies("hurt");
 
+      this.scene.time.delayedCall(50, () => {
+        if (this.active) this.spriteBody.clearTint();
+      });
+
       this.scene.time.delayedCall(500, () => {
         if (this.active) {
           this.isInvulnerable = false;

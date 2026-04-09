@@ -15,14 +15,19 @@ export interface EnemyStats {
   lootTable: { key: DropKey; weight: number }[]; // Lista de posibles objetos
 }
 
-export type EnemyType = "SKELETON" | "KNIGHT" | "FRANKENSTEIN" | "DEVIL";
+export type EnemyType =
+  | "SKELETON"
+  | "SLIME"
+  | "KNIGHT"
+  | "FRANKENSTEIN"
+  | "DEVIL";
 
 export const ENEMY_TYPES: Record<EnemyType, EnemyStats> = {
   SKELETON: {
     name: "skeleton",
-    hp: 3,
-    damage: 2,
-    defense: 2,
+    hp: 6,
+    damage: 4,
+    defense: 1,
     criticalChance: 0.05,
     trapDamage: 1,
     damageAoE: 0,
@@ -37,12 +42,31 @@ export const ENEMY_TYPES: Record<EnemyType, EnemyStats> = {
       { key: "PICKAXE", weight: 0.25 },
     ],
   },
+  SLIME: {
+    name: "slime",
+    hp: 4,
+    damage: 3,
+    defense: 1,
+    criticalChance: 0.02,
+    trapDamage: 1,
+    damageAoE: 0,
+    sprite: "slime",
+    isAggressive: false,
+    isRanged: false,
+    dropChance: 0.7, // 70% de soltar algo
+    lootTable: [
+      { key: "DEFENSE", weight: 0.2 },
+      { key: "ATTACK", weight: 0.2 },
+      { key: "CRIT", weight: 0.2 },
+      { key: "PICKAXE", weight: 0.4 },
+    ],
+  },
   KNIGHT: {
     name: "knight",
-    hp: 10,
-    damage: 5,
-    defense: 6,
-    criticalChance: 0.1,
+    hp: 12,
+    damage: 6,
+    defense: 4,
+    criticalChance: 0.08,
     trapDamage: 0,
     damageAoE: 0,
     sprite: "knight",
@@ -58,11 +82,11 @@ export const ENEMY_TYPES: Record<EnemyType, EnemyStats> = {
   },
   FRANKENSTEIN: {
     name: "frankenstein",
-    hp: 20,
+    hp: 16,
     damage: 8,
-    defense: 10,
+    defense: 8,
     trapDamage: 1,
-    criticalChance: 0.15,
+    criticalChance: 0.1,
     sprite: "frankenstein",
     isAggressive: true,
     isRanged: false,
@@ -77,10 +101,10 @@ export const ENEMY_TYPES: Record<EnemyType, EnemyStats> = {
   },
   DEVIL: {
     name: "devil",
-    hp: 15,
-    damage: 5,
-    defense: 5,
-    criticalChance: 0.2,
+    hp: 20,
+    damage: 10,
+    defense: 8,
+    criticalChance: 0.15,
     trapDamage: 1,
     sprite: "devil",
     isAggressive: true,

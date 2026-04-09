@@ -212,7 +212,7 @@ export const CRYSTAL_DROP_TABLE: Record<string, DropTable> = {
 };
 
 export interface EnemyConfig {
-  type: "SKELETON" | "KNIGHT" | "FRANKENSTEIN" | "DEVIL"; // Añade aquí más tipos si tienes
+  type: "SKELETON" | "SLIME" | "KNIGHT" | "FRANKENSTEIN" | "DEVIL"; // Añade aquí más tipos si tienes
   count: number;
 }
 
@@ -306,7 +306,10 @@ export const LEVEL_SETTINGS: Record<
 };
 export const LEVEL_DESIGNS: Record<number, LevelDesign> = {
   1: {
-    enemies: [{ type: "SKELETON", count: 7 }],
+    enemies: [
+      { type: "SKELETON", count: 3 },
+      { type: "SLIME", count: 7 },
+    ],
     traps: 5,
     crystals: [
       { type: "pink", level: 1, count: 5 },
@@ -317,7 +320,10 @@ export const LEVEL_DESIGNS: Record<number, LevelDesign> = {
     pickaxes: 3,
   },
   2: {
-    enemies: [{ type: "SKELETON", count: 10 }],
+    enemies: [
+      { type: "SKELETON", count: 6 },
+      { type: "SLIME", count: 7 },
+    ],
     traps: 5,
     crystals: [
       { type: "pink", level: 2, count: 4 },
@@ -329,8 +335,9 @@ export const LEVEL_DESIGNS: Record<number, LevelDesign> = {
   },
   3: {
     enemies: [
-      { type: "KNIGHT", count: 2 },
-      { type: "SKELETON", count: 10 },
+      { type: "KNIGHT", count: 1 },
+      { type: "SKELETON", count: 5 },
+      { type: "SLIME", count: 5 },
     ],
     traps: 5,
     crystals: [
@@ -343,8 +350,9 @@ export const LEVEL_DESIGNS: Record<number, LevelDesign> = {
   },
   4: {
     enemies: [
-      { type: "KNIGHT", count: 4 },
-      { type: "SKELETON", count: 10 },
+      { type: "KNIGHT", count: 3 },
+      { type: "SKELETON", count: 6 },
+      { type: "SLIME", count: 2 },
     ],
     traps: 5,
     crystals: [
@@ -359,7 +367,8 @@ export const LEVEL_DESIGNS: Record<number, LevelDesign> = {
     enemies: [
       { type: "FRANKENSTEIN", count: 1 },
       { type: "KNIGHT", count: 2 },
-      { type: "SKELETON", count: 10 },
+      { type: "SKELETON", count: 8 },
+      { type: "SLIME", count: 2 },
     ],
     traps: 5,
     crystals: [
@@ -680,6 +689,7 @@ export const DUNGEON_POINTS = {
   },
   ENEMIES: {
     SKELETON: 200,
+    SLIME: 100,
     KNIGHT: 400,
     FRANKENSTEIN: 600,
     DEVIL: 1000,
@@ -957,24 +967,28 @@ export const POINTS: {
     description: translate("deepdungeon.points4"),
   },
   {
-    image: "world/DeepDungeonAssets/skeleton.png",
+    image: "world/DeepDungeonAssets/slime.png",
     description: translate("deepdungeon.points5"),
   },
   {
-    image: "world/DeepDungeonAssets/knight.png",
+    image: "world/DeepDungeonAssets/skeleton.png",
     description: translate("deepdungeon.points6"),
   },
   {
-    image: "world/DeepDungeonAssets/frankenstein.png",
+    image: "world/DeepDungeonAssets/knight.png",
     description: translate("deepdungeon.points7"),
   },
   {
-    image: "world/DeepDungeonAssets/devil.png",
+    image: "world/DeepDungeonAssets/frankenstein.png",
     description: translate("deepdungeon.points8"),
   },
   {
-    image: "world/DeepDungeonAssets/Stairs.png",
+    image: "world/DeepDungeonAssets/devil.png",
     description: translate("deepdungeon.points9"),
+  },
+  {
+    image: "world/DeepDungeonAssets/Stairs.png",
+    description: translate("deepdungeon.points10"),
   },
 ];
 export const ENEMIES_GUIDE: {
@@ -983,20 +997,24 @@ export const ENEMIES_GUIDE: {
   width?: number;
 }[] = [
   {
-    image: "world/DeepDungeonAssets/skeleton.png",
+    image: "world/DeepDungeonAssets/slime.png",
     description: translate("deepdungeon.enemies1"),
   },
   {
-    image: "world/DeepDungeonAssets/knight.png",
+    image: "world/DeepDungeonAssets/skeleton.png",
     description: translate("deepdungeon.enemies2"),
   },
   {
-    image: "world/DeepDungeonAssets/frankenstein.png",
+    image: "world/DeepDungeonAssets/knight.png",
     description: translate("deepdungeon.enemies3"),
   },
   {
-    image: "world/DeepDungeonAssets/devil.png",
+    image: "world/DeepDungeonAssets/frankenstein.png",
     description: translate("deepdungeon.enemies4"),
+  },
+  {
+    image: "world/DeepDungeonAssets/devil.png",
+    description: translate("deepdungeon.enemies5"),
   },
 ];
 export const STATS_GUIDE: {
