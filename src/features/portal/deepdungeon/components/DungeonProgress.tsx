@@ -261,8 +261,8 @@ export const DungeonProgress: React.FC<{
           type="formula"
           icon={
             category === "Enemies"
-              ? SUNNYSIDE.icons.death
-              : SUNNYSIDE.icons.hammer
+              ? "/world/DeepDungeonAssets/skull.png"
+              : "/world/DeepDungeonAssets/bag_crystal.png"
           }
         >
           {`${category} - Map ${currentLevel}`}

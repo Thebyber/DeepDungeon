@@ -32,6 +32,7 @@ export class GridMovement {
   private readonly OFFSET_X = 8;
   private readonly OFFSET_Y = 4;
   private rockHits: Map<string, number> = new Map(); // Para rastrear golpes a rocas específicas
+  private attackCooldown = false; // Evita spam de ataques
 
   constructor(
     scene: Phaser.Scene,
@@ -168,29 +169,32 @@ export class GridMovement {
 
     if (targetEnemy) {
       const player = this.currentPlayer;
-      if (player.isAttacking || player.isHurting) {
-        //console.log("Acción bloqueada: Jugador ocupado");
-
+      if (player.isAttacking || player.isHurting || this.attackCooldown) {
         return;
       }
+
+      this.attackCooldown = true;
       player.attack();
 
       // Aplicamos el daño calculado
       (this.scene as any).handleEnemyDamage(targetEnemy);
       // 4. Contraataque enemigo con ligero delay
       this.scene.time.delayedCall(800, () => {
-        // Comprobamos active (Phaser) y currentHp (tu lógica)
         if (
           targetEnemy &&
           targetEnemy.active &&
           targetEnemy.getCurrentHp() > 0
         ) {
-          // El enemigo decide cómo atacarte (animación + resta de energía interna)
           targetEnemy.attackPlayer();
-          // El jugador solo reproduce su animación visual de dolor si sigue vivo
           if (!player.isDead) player.hurt();
         }
       });
+
+      // Liberar cooldown tras 1000ms (tiempo suficiente para el contraataque)
+      this.scene.time.delayedCall(1000, () => {
+        this.attackCooldown = false;
+      });
+
       return;
     }
 

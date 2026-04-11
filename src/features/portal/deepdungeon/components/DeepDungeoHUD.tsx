@@ -9,6 +9,7 @@ import { goHome } from "../../lib/portalUtil";
 // Componentes de UI originales
 import { HudContainer } from "components/ui/HudContainer";
 import { EnergyStats } from "./EnergyBar"; // Tu barra de vida/energía
+import { DeepDungeonTarget } from "./hud/DeepDungeonTarget";
 import { ExhaustedAlert } from "./ExhaustedAlert";
 
 // Componentes del Codex
@@ -61,7 +62,8 @@ export const DeepDungeonHUD: React.FC = () => {
           className="fixed z-50 pointer-events-none"
           style={{ top: `${PIXEL_SCALE * 6}px`, left: `${PIXEL_SCALE * 6}px` }}
         >
-          <div className="pointer-events-auto">
+          <div className="pointer-events-auto flex flex-col gap-1">
+            <DeepDungeonTarget />
             <EnergyStats />
           </div>
         </div>
@@ -209,7 +211,10 @@ export const DeepDungeonHUD: React.FC = () => {
                   background: activeTab === "Enemies" ? "#ead4aa" : undefined,
                 }}
               >
-                <SquareIcon icon={SUNNYSIDE.icons.death} width={9} />
+                <SquareIcon
+                  icon="/world/DeepDungeonAssets/skull.png"
+                  width={9}
+                />
               </OuterPanel>
               <OuterPanel
                 className="p-1 cursor-pointer"
@@ -218,7 +223,10 @@ export const DeepDungeonHUD: React.FC = () => {
                   background: activeTab === "Crystals" ? "#ead4aa" : undefined,
                 }}
               >
-                <SquareIcon icon={SUNNYSIDE.icons.hammer} width={9} />
+                <SquareIcon
+                  icon="/world/DeepDungeonAssets/bag_crystal.png"
+                  width={9}
+                />
               </OuterPanel>
               <OuterPanel
                 className="p-1 cursor-pointer"
@@ -227,10 +235,7 @@ export const DeepDungeonHUD: React.FC = () => {
                   background: activeTab === "Drops" ? "#ead4aa" : undefined,
                 }}
               >
-                <SquareIcon
-                  icon={SUNNYSIDE.icons.expression_confused}
-                  width={9}
-                />
+                <SquareIcon icon={codexIcon} width={9} />
               </OuterPanel>
               <OuterPanel
                 className="p-1 cursor-pointer"

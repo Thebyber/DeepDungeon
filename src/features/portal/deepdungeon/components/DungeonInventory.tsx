@@ -46,7 +46,7 @@ export const DungeonInventory: React.FC<Props> = ({ portalService }) => {
           <div className="mb-3">
             <Label
               type="formula"
-              icon={SUNNYSIDE.icons.hammer}
+              icon="/world/DeepDungeonAssets/bag_crystal.png"
               className="ml-1"
             >
               {"Tools"}

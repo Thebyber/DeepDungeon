@@ -67,7 +67,11 @@ export const DungeonDrops: React.FC = () => {
           onClick={() => setTab("enemies")}
         >
           <div className="flex items-center gap-1">
-            <img src={SUNNYSIDE.icons.death} className="w-3 h-3" alt="" />
+            <img
+              src="/world/DeepDungeonAssets/skull.png"
+              className="w-3 h-3"
+              alt=""
+            />
             {`Enemies`}
           </div>
         </button>
@@ -80,7 +84,11 @@ export const DungeonDrops: React.FC = () => {
           onClick={() => setTab("crystals")}
         >
           <div className="flex items-center gap-1">
-            <img src={SUNNYSIDE.icons.hammer} className="w-3 h-3" alt="" />
+            <img
+              src="/world/DeepDungeonAssets/bag_crystal.png"
+              className="w-3 h-3"
+              alt=""
+            />
             {`Crystals`}
           </div>
         </button>

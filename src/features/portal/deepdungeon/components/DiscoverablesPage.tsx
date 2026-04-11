@@ -55,7 +55,11 @@ export const DiscoverablesPage: React.FC = () => {
 
         {/* SECCIÓN DE CRISTALES */}
         <div className="flex flex-col">
-          <Label type="formula" icon={SUNNYSIDE.icons.hammer} className="mb-2">
+          <Label
+            type="formula"
+            icon="/world/DeepDungeonAssets/bag_crystal.png"
+            className="mb-2"
+          >
             {"Minerals & Crystals"}
           </Label>
           <div className="grid grid-cols-2 gap-2">
