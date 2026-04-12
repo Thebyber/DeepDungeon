@@ -6,6 +6,8 @@ import { CrystalContainer } from "../containers/CrystalContainer";
 interface Enemy {
   x: number;
   y: number;
+  nextGridX?: number;
+  nextGridY?: number;
   active: boolean;
   getCurrentHp(): number;
   takeDamage(damage: number): void;
@@ -160,11 +162,12 @@ export class GridMovement {
     // 4. COMPROBAR ENEMIGOS Y ATACAR
     const enemies = (this.scene as SceneWithEnemies).enemies || [];
 
-    // Buscamos si hay un enemigo específico en la celda de destino
+    // Buscamos si hay un enemigo en la celda de destino (posición actual O reservada)
     const targetEnemy = enemies.find(
       (e: Enemy) =>
-        Math.floor(e.x / 16) * 16 === nextGridX &&
-        Math.floor(e.y / 16) * 16 === nextGridY,
+        (Math.floor(e.x / 16) * 16 === nextGridX &&
+          Math.floor(e.y / 16) * 16 === nextGridY) ||
+        (e.nextGridX === nextGridX && e.nextGridY === nextGridY),
     );
 
     if (targetEnemy) {

@@ -468,6 +468,9 @@ export class EnemyContainer extends Phaser.GameObjects.Container {
 
     this.attackAoESound?.play();
 
+    // Congelamos el movimiento del jugador durante el AoE
+    (this.scene as any).gridMovement?.setFrozen(true);
+
     // IMPACTO AOE
     this.scene.time.delayedCall(50, () => {
       if (
@@ -476,9 +479,10 @@ export class EnemyContainer extends Phaser.GameObjects.Container {
         this.isDead ||
         !this.spriteBody ||
         !this.scene
-      )
+      ) {
+        (this.scene as any).gridMovement?.setFrozen(false);
         return;
-      // Si el objeto ya no es válido o ha sido destruido, salimos inmediatamente
+      }
 
       // 1. Aplicamos el daño
       (this.scene as any).handlePlayerDamage(
@@ -487,15 +491,16 @@ export class EnemyContainer extends Phaser.GameObjects.Container {
         true,
       );
 
-      // 2. COMPROBACIÓN CRÍTICA:
-      // Solo llamar a hurt() si el jugador NO ha muerto tras el daño anterior
-      const player = this.player as any; // Usamos any para acceder a isDead
-
+      // 2. Solo hurt() si el jugador sigue vivo
+      const player = this.player as any;
       if (player && !player.isDead) {
         if (typeof player.hurt === "function") {
           player.hurt();
         }
       }
+
+      // Liberamos el movimiento tras aplicar el daño
+      (this.scene as any).gridMovement?.setFrozen(false);
     });
 
     this.scene.time.delayedCall(1000, () => {

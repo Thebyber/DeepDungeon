@@ -52,7 +52,10 @@ export const EnergyStats: React.FC = () => {
     <div className="flex flex-col items-start">
       <InnerPanel
         className="flex flex-col p-2"
-        style={{ width: `${PIXEL_SCALE * 90}px` }}
+        style={{
+          width: `${PIXEL_SCALE * 90}px`,
+          background: "rgba(180, 120, 60, 0.55)",
+        }}
       >
         {/* ENERGY BAR */}
         <div className="flex items-center gap-2">
